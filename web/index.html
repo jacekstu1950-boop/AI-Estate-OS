@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI-Estate-OS — Skanska Stilla</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; color: #1f2937; }
+    header { background: #111827; color: white; padding: 24px; }
+    main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; margin-bottom: 20px; }
+    .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
+    th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #f9fafb; }
+    .ok { color: #047857; font-weight: 700; }
+    .warn { color: #b45309; font-weight: 700; }
+    .error { color: #b91c1c; font-weight: 700; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI-Estate-OS</h1>
+    <div>Skanska Stilla — zweryfikowane dane mieszkań</div>
+  </header>
+
+  <main>
+    <div id="status" class="card">Ładowanie danych…</div>
+    <div id="summary" class="summary"></div>
+
+    <h2>Mieszkania</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Kod</th>
+            <th>Budynek</th>
+            <th>Piętro</th>
+            <th>Pokoje</th>
+            <th>Metraż</th>
+            <th>Cena</th>
+            <th>Cena/m²</th>
+            <th>Dostępność</th>
+            <th>Źródło</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <h2>Ostatnie zmiany</h2>
+    <div id="changes" class="card">Ładowanie…</div>
+  </main>
+
+  <script>
+    const money = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' });
+    const number = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 2 });
+
+    async function load() {
+      const status = document.getElementById('status');
+      try {
+        const [latestRes, changesRes] = await Promise.all([
+          fetch('/api/skanska/stilla/latest'),
+          fetch('/api/skanska/stilla/changes')
+        ]);
+
+        if (!latestRes.ok) throw new Error('Błąd endpointu latest: ' + latestRes.status);
+        if (!changesRes.ok) throw new Error('Błąd endpointu changes: ' + changesRes.status);
+
+        const latest = await latestRes.json();
+        const changes = await changesRes.json();
+
+        status.innerHTML = '<span class="ok">API i dane działają poprawnie.</span>';
+
+        document.getElementById('summary').innerHTML = `
+          <div class="card"><strong>Deweloper</strong><br>${latest.developer}</div>
+          <div class="card"><strong>Projekt</strong><br>${latest.project}</div>
+          <div class="card"><strong>Liczba lokali</strong><br>${latest.count}</div>
+          <div class="card"><strong>Verified PASS</strong><br>${latest.verified_pass_count}</div>
+          <div class="card"><strong>Prawa do 2D</strong><br><span class="warn">${latest.floorplan_rights_status}</span></div>
+        `;
+
+        document.getElementById('rows').innerHTML = latest.records.map(item => `
+          <tr>
+            <td>${item.apartment_code}</td>
+            <td>${item.building ?? ''}</td>
+            <td>${item.floor ?? ''}</td>
+            <td>${item.rooms ?? ''}</td>
+            <td>${number.format(item.area_m2)} m²</td>
+            <td>${money.format(item.price_pln)}</td>
+            <td>${money.format(item.price_per_m2_pln)}</td>
+            <td>${item.availability}</td>
+            <td><a href="${item.source_url}" target="_blank" rel="noopener">Skanska</a></td>
+          </tr>
+        `).join('');
+
+        const s = changes.summary || {};
+        document.getElementById('changes').innerHTML = `
+          ADDED: <strong>${s.ADDED ?? 0}</strong> |
+          REMOVED: <strong>${s.REMOVED ?? 0}</strong> |
+          CHANGED: <strong>${s.CHANGED ?? 0}</strong> |
+          UNCHANGED: <strong>${s.UNCHANGED ?? 0}</strong>
+        `;
+      } catch (err) {
+        status.innerHTML = '<span class="error">' + err.message + '</span>';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
