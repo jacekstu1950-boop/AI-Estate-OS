@@ -1,28 +1,43 @@
+import argparse
 import json
 from pathlib import Path
 
-SOURCE = Path("snapshots/skanska_stilla/stilla_2026-09-18T16-19-40.json")
-TARGET = Path("snapshots/skanska_stilla/stilla_2026-09-18T16-30-00.json")
+DEFAULT_SOURCE_DIR = Path("snapshots") / "skanska_stilla"
+DEFAULT_TARGET = Path("tests") / "fixtures" / "skanska_stilla" / "stilla_test_modified.json"
 
 
-def main():
-    data = json.loads(SOURCE.read_text(encoding="utf-8"))
+def find_latest_live_snapshot(directory=DEFAULT_SOURCE_DIR):
+    files = sorted(
+        path
+        for path in Path(directory).glob("stilla_*.json")
+        if path.is_file()
+    )
+    if not files:
+        raise FileNotFoundError(
+            "Brak live snapshotów w snapshots/skanska_stilla."
+        )
+    return files[-1]
+
+
+def build_modified_test_snapshot(source_path):
+    data = json.loads(Path(source_path).read_text(encoding="utf-8"))
     records = data["records"]
 
-    by_code = {item["apartment_code"]: item for item in records}
+    by_code = {
+        item["apartment_code"]: item
+        for item in records
+        if item.get("apartment_code")
+    }
 
-    # 1. Zmiana ceny i dostępności BA0005
     if "BA0005" in by_code:
         by_code["BA0005"]["price_pln"] = 555000.00
         by_code["BA0005"]["availability"] = "sold"
 
-    # 2. Usunięcie BA0688
     records = [
         item for item in records
         if item.get("apartment_code") != "BA0688"
     ]
 
-    # 3. Dodanie rekordu testowego
     records.append({
         "developer": "Skanska",
         "project": "Stilla",
@@ -35,7 +50,7 @@ def main():
         "price_per_m2_pln": 14000.0,
         "availability": "available",
         "source_url": "TEST_ONLY",
-        "retrieved_at": "2026-09-18T16:30:00",
+        "retrieved_at": "TEST_ONLY",
         "identity_status": "PASS",
         "evidence_status": "PASS",
         "floorplan_rights_status": "UNKNOWN",
@@ -43,16 +58,40 @@ def main():
         "notes": ["TEST INTEGRACYJNY"],
     })
 
-    data["captured_at"] = "2026-09-18T16:30:00"
+    data["captured_at"] = "TEST_ONLY"
     data["count"] = len(records)
     data["records"] = records
+    return data
 
-    TARGET.write_text(
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Tworzy syntetyczny snapshot testowy poza katalogiem live."
+    )
+    parser.add_argument(
+        "--source",
+        default=None,
+        help="Opcjonalna ścieżka do bazowego live snapshotu.",
+    )
+    parser.add_argument(
+        "--target",
+        default=str(DEFAULT_TARGET),
+        help="Ścieżka wyjściowa dla danych testowych.",
+    )
+    args = parser.parse_args()
+
+    source = Path(args.source) if args.source else find_latest_live_snapshot()
+    target = Path(args.target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    data = build_modified_test_snapshot(source)
+    target.write_text(
         json.dumps(data, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
-    print(f"Utworzono: {TARGET}")
+    print(f"Źródło live: {source}")
+    print(f"Utworzono test fixture: {target}")
 
 
 if __name__ == "__main__":
