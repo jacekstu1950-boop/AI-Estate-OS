@@ -15,6 +15,17 @@ def test_health():
     assert response.json()["status"] == "ok"
 
 
+def test_frontend_served(tmp_path, monkeypatch):
+    index = tmp_path / "index.html"
+    index.write_text("<html><body>AI-Estate-OS</body></html>", encoding="utf-8")
+    monkeypatch.setattr(api_app, "WEB_INDEX", index)
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "AI-Estate-OS" in response.text
+
+
 def test_latest_returns_verified_snapshot(tmp_path, monkeypatch):
     latest = tmp_path / "latest.json"
     latest.write_text(
