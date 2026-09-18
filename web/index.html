@@ -166,6 +166,10 @@
         </label>
 
         <div>
+          <button id="applyFilters" type="button">Zastosuj filtry</button>
+        </div>
+
+        <div>
           <button id="resetFilters" type="button">Wyczyść filtry</button>
         </div>
       </div>
@@ -270,7 +274,10 @@
 
     function renderRows() {
       const records = getFilteredRecords();
-      el('resultsCount').textContent = `Znaleziono: ${records.length} z ${apartments.length}`;
+      const priceMax = el('priceMax').value.trim();
+      el('resultsCount').textContent =
+        `Znaleziono: ${records.length} z ${apartments.length}` +
+        (priceMax ? ` | Cena do: ${priceMax} PLN` : '');
 
       el('rows').innerHTML = records.map(item => `
         <tr>
@@ -304,6 +311,8 @@
         el(id).addEventListener('input', renderRows);
         el(id).addEventListener('change', renderRows);
       });
+
+      el('applyFilters').addEventListener('click', renderRows);
 
       el('resetFilters').addEventListener('click', () => {
         el('searchCode').value = '';
