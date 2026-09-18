@@ -14,6 +14,7 @@ def test_frontend_contains_search_and_filters():
         'id="priceMin"',
         'id="priceMax"',
         'id="sortBy"',
+        'id="applyFilters"',
         'id="resetFilters"',
         'id="resultsCount"',
     ]
@@ -29,3 +30,4 @@ def test_frontend_contains_filter_logic():
     assert "function renderRows()" in html
     assert "function bindFilters()" in html
     assert "Brak mieszkań spełniających wybrane kryteria." in html
+    assert "Cena do:" in html
