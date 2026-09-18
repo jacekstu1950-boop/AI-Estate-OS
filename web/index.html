@@ -5,18 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI-Estate-OS — Skanska Stilla</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; color: #1f2937; }
+    :root {
+      font-family: Arial, sans-serif;
+      color: #1f2937;
+      background: #f5f7fa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f5f7fa; color: #1f2937; }
     header { background: #111827; color: white; padding: 24px; }
-    main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-    .summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; margin-bottom: 20px; }
-    .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
-    th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    header h1 { margin: 0 0 6px; }
+    main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 16px 0 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    .filters label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    input, select, button {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font: inherit;
+      background: white;
+    }
+    button {
+      cursor: pointer;
+      background: #111827;
+      color: white;
+      border-color: #111827;
+      font-weight: 700;
+    }
+    button:hover { opacity: .92; }
+    .results-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin: 14px 0 10px;
+      flex-wrap: wrap;
+    }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      min-width: 920px;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      white-space: nowrap;
+    }
     th { background: #f9fafb; }
+    tbody tr:hover { background: #f9fafb; }
     .ok { color: #047857; font-weight: 700; }
     .warn { color: #b45309; font-weight: 700; }
     .error { color: #b91c1c; font-weight: 700; }
+    .muted { color: #6b7280; }
     a { color: #2563eb; }
+    .empty {
+      text-align: center;
+      padding: 28px;
+      color: #6b7280;
+    }
   </style>
 </head>
 <body>
@@ -29,8 +104,79 @@
     <div id="status" class="card">Ładowanie danych…</div>
     <div id="summary" class="summary"></div>
 
-    <h2>Mieszkania</h2>
+    <h2>Wyszukiwarka i filtry</h2>
     <div class="card">
+      <div class="filters">
+        <label>
+          Kod lokalu
+          <input id="searchCode" type="search" placeholder="np. BA0005">
+        </label>
+
+        <label>
+          Liczba pokoi
+          <select id="filterRooms">
+            <option value="">Wszystkie</option>
+          </select>
+        </label>
+
+        <label>
+          Piętro
+          <select id="filterFloor">
+            <option value="">Wszystkie</option>
+          </select>
+        </label>
+
+        <label>
+          Dostępność
+          <select id="filterAvailability">
+            <option value="">Wszystkie</option>
+          </select>
+        </label>
+
+        <label>
+          Metraż od (m²)
+          <input id="areaMin" type="number" step="0.01" min="0" placeholder="np. 30">
+        </label>
+
+        <label>
+          Metraż do (m²)
+          <input id="areaMax" type="number" step="0.01" min="0" placeholder="np. 50">
+        </label>
+
+        <label>
+          Cena od (PLN)
+          <input id="priceMin" type="number" step="1000" min="0" placeholder="np. 500000">
+        </label>
+
+        <label>
+          Cena do (PLN)
+          <input id="priceMax" type="number" step="1000" min="0" placeholder="np. 700000">
+        </label>
+
+        <label>
+          Sortowanie
+          <select id="sortBy">
+            <option value="code">Kod lokalu</option>
+            <option value="priceAsc">Cena rosnąco</option>
+            <option value="priceDesc">Cena malejąco</option>
+            <option value="areaAsc">Metraż rosnąco</option>
+            <option value="areaDesc">Metraż malejąco</option>
+            <option value="ppmAsc">Cena/m² rosnąco</option>
+          </select>
+        </label>
+
+        <div>
+          <button id="resetFilters" type="button">Wyczyść filtry</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-bar">
+      <h2 style="margin:0">Mieszkania</h2>
+      <div id="resultsCount" class="muted"></div>
+    </div>
+
+    <div class="card table-wrap">
       <table>
         <thead>
           <tr>
@@ -47,6 +193,7 @@
         </thead>
         <tbody id="rows"></tbody>
       </table>
+      <div id="emptyState" class="empty" hidden>Brak mieszkań spełniających wybrane kryteria.</div>
     </div>
 
     <h2>Ostatnie zmiany</h2>
@@ -54,11 +201,127 @@
   </main>
 
   <script>
-    const money = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' });
-    const number = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 2 });
+    const money = new Intl.NumberFormat('pl-PL', {
+      style: 'currency',
+      currency: 'PLN'
+    });
+    const number = new Intl.NumberFormat('pl-PL', {
+      maximumFractionDigits: 2
+    });
+
+    let apartments = [];
+
+    const el = id => document.getElementById(id);
+
+    function uniqueSorted(values) {
+      return [...new Set(values.filter(value => value !== null && value !== undefined))]
+        .sort((a, b) => Number(a) - Number(b));
+    }
+
+    function fillSelect(id, values) {
+      const select = el(id);
+      const current = select.value;
+      const first = select.options[0].outerHTML;
+      select.innerHTML = first + values.map(value =>
+        `<option value="${String(value)}">${String(value)}</option>`
+      ).join('');
+      select.value = current;
+    }
+
+    function asNumber(id) {
+      const value = el(id).value.trim();
+      return value === '' ? null : Number(value);
+    }
+
+    function getFilteredRecords() {
+      const code = el('searchCode').value.trim().toUpperCase();
+      const rooms = el('filterRooms').value;
+      const floor = el('filterFloor').value;
+      const availability = el('filterAvailability').value;
+      const areaMin = asNumber('areaMin');
+      const areaMax = asNumber('areaMax');
+      const priceMin = asNumber('priceMin');
+      const priceMax = asNumber('priceMax');
+
+      const filtered = apartments.filter(item => {
+        if (code && !String(item.apartment_code || '').toUpperCase().includes(code)) return false;
+        if (rooms && String(item.rooms) !== rooms) return false;
+        if (floor && String(item.floor) !== floor) return false;
+        if (availability && String(item.availability) !== availability) return false;
+        if (areaMin !== null && Number(item.area_m2) < areaMin) return false;
+        if (areaMax !== null && Number(item.area_m2) > areaMax) return false;
+        if (priceMin !== null && Number(item.price_pln) < priceMin) return false;
+        if (priceMax !== null && Number(item.price_pln) > priceMax) return false;
+        return true;
+      });
+
+      const sortBy = el('sortBy').value;
+      filtered.sort((a, b) => {
+        if (sortBy === 'priceAsc') return Number(a.price_pln) - Number(b.price_pln);
+        if (sortBy === 'priceDesc') return Number(b.price_pln) - Number(a.price_pln);
+        if (sortBy === 'areaAsc') return Number(a.area_m2) - Number(b.area_m2);
+        if (sortBy === 'areaDesc') return Number(b.area_m2) - Number(a.area_m2);
+        if (sortBy === 'ppmAsc') return Number(a.price_per_m2_pln) - Number(b.price_per_m2_pln);
+        return String(a.apartment_code).localeCompare(String(b.apartment_code), 'pl');
+      });
+
+      return filtered;
+    }
+
+    function renderRows() {
+      const records = getFilteredRecords();
+      el('resultsCount').textContent = `Znaleziono: ${records.length} z ${apartments.length}`;
+
+      el('rows').innerHTML = records.map(item => `
+        <tr>
+          <td><strong>${item.apartment_code}</strong></td>
+          <td>${item.building ?? ''}</td>
+          <td>${item.floor ?? ''}</td>
+          <td>${item.rooms ?? ''}</td>
+          <td>${number.format(item.area_m2)} m²</td>
+          <td>${money.format(item.price_pln)}</td>
+          <td>${money.format(item.price_per_m2_pln)}</td>
+          <td>${item.availability}</td>
+          <td><a href="${item.source_url}" target="_blank" rel="noopener">Skanska</a></td>
+        </tr>
+      `).join('');
+
+      el('emptyState').hidden = records.length !== 0;
+    }
+
+    function bindFilters() {
+      [
+        'searchCode',
+        'filterRooms',
+        'filterFloor',
+        'filterAvailability',
+        'areaMin',
+        'areaMax',
+        'priceMin',
+        'priceMax',
+        'sortBy'
+      ].forEach(id => {
+        el(id).addEventListener('input', renderRows);
+        el(id).addEventListener('change', renderRows);
+      });
+
+      el('resetFilters').addEventListener('click', () => {
+        el('searchCode').value = '';
+        el('filterRooms').value = '';
+        el('filterFloor').value = '';
+        el('filterAvailability').value = '';
+        el('areaMin').value = '';
+        el('areaMax').value = '';
+        el('priceMin').value = '';
+        el('priceMax').value = '';
+        el('sortBy').value = 'code';
+        renderRows();
+      });
+    }
 
     async function load() {
-      const status = document.getElementById('status');
+      const status = el('status');
+
       try {
         const [latestRes, changesRes] = await Promise.all([
           fetch('/api/skanska/stilla/latest'),
@@ -71,9 +334,11 @@
         const latest = await latestRes.json();
         const changes = await changesRes.json();
 
+        apartments = latest.records || [];
+
         status.innerHTML = '<span class="ok">API i dane działają poprawnie.</span>';
 
-        document.getElementById('summary').innerHTML = `
+        el('summary').innerHTML = `
           <div class="card"><strong>Deweloper</strong><br>${latest.developer}</div>
           <div class="card"><strong>Projekt</strong><br>${latest.project}</div>
           <div class="card"><strong>Liczba lokali</strong><br>${latest.count}</div>
@@ -81,22 +346,26 @@
           <div class="card"><strong>Prawa do 2D</strong><br><span class="warn">${latest.floorplan_rights_status}</span></div>
         `;
 
-        document.getElementById('rows').innerHTML = latest.records.map(item => `
-          <tr>
-            <td>${item.apartment_code}</td>
-            <td>${item.building ?? ''}</td>
-            <td>${item.floor ?? ''}</td>
-            <td>${item.rooms ?? ''}</td>
-            <td>${number.format(item.area_m2)} m²</td>
-            <td>${money.format(item.price_pln)}</td>
-            <td>${money.format(item.price_per_m2_pln)}</td>
-            <td>${item.availability}</td>
-            <td><a href="${item.source_url}" target="_blank" rel="noopener">Skanska</a></td>
-          </tr>
-        `).join('');
+        fillSelect('filterRooms', uniqueSorted(apartments.map(item => item.rooms)));
+        fillSelect('filterFloor', uniqueSorted(apartments.map(item => item.floor)));
+
+        const availabilityValues = [...new Set(
+          apartments
+            .map(item => item.availability)
+            .filter(Boolean)
+        )].sort();
+
+        const availabilitySelect = el('filterAvailability');
+        availabilitySelect.innerHTML =
+          '<option value="">Wszystkie</option>' +
+          availabilityValues.map(value =>
+            `<option value="${value}">${value}</option>`
+          ).join('');
+
+        renderRows();
 
         const s = changes.summary || {};
-        document.getElementById('changes').innerHTML = `
+        el('changes').innerHTML = `
           ADDED: <strong>${s.ADDED ?? 0}</strong> |
           REMOVED: <strong>${s.REMOVED ?? 0}</strong> |
           CHANGED: <strong>${s.CHANGED ?? 0}</strong> |
@@ -107,6 +376,7 @@
       }
     }
 
+    bindFilters();
     load();
   </script>
 </body>
