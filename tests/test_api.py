@@ -24,6 +24,7 @@ def test_frontend_served(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert "AI-Estate-OS" in response.text
+    assert response.headers["cache-control"].startswith("no-store")
 
 
 def test_latest_returns_verified_snapshot(tmp_path, monkeypatch):
