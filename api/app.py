@@ -2,11 +2,13 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.2.0"
 SNAPSHOT_DIR = Path("snapshots") / "skanska_stilla"
 LATEST_FILE = SNAPSHOT_DIR / "latest.json"
 CHANGES_FILE = SNAPSHOT_DIR / "changes_latest.json"
+WEB_INDEX = Path("web") / "index.html"
 
 app = FastAPI(
     title="AI-Estate-OS API",
@@ -29,6 +31,13 @@ def load_json_file(path: Path):
             status_code=500,
             detail=f"Niepoprawny JSON w pliku {path}: {exc}",
         ) from exc
+
+
+@app.get("/", include_in_schema=False)
+def frontend():
+    if not WEB_INDEX.exists():
+        raise HTTPException(status_code=503, detail="Brak pliku web/index.html")
+    return FileResponse(WEB_INDEX)
 
 
 @app.get("/health")
