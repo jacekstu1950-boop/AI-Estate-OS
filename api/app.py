@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.2.1"
 SNAPSHOT_DIR = Path("snapshots") / "skanska_stilla"
 LATEST_FILE = SNAPSHOT_DIR / "latest.json"
 CHANGES_FILE = SNAPSHOT_DIR / "changes_latest.json"
@@ -37,7 +37,14 @@ def load_json_file(path: Path):
 def frontend():
     if not WEB_INDEX.exists():
         raise HTTPException(status_code=503, detail="Brak pliku web/index.html")
-    return FileResponse(WEB_INDEX)
+    return FileResponse(
+        WEB_INDEX,
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 @app.get("/health")
