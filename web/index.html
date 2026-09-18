@@ -237,6 +237,26 @@
       return value === '' ? null : Number(value);
     }
 
+    function availabilityLabel(value) {
+      if (value === 'available') return 'Tak';
+      if (value === 'unavailable') return 'Nie';
+      return value || 'Nieustalone';
+    }
+
+    function statusLabel(value) {
+      if (value === 'PASS') return 'Tak';
+      if (value === 'FAIL') return 'Nie';
+      if (value === 'UNKNOWN') return 'Nieustalone';
+      return value || 'Nieustalone';
+    }
+
+    function rightsLabel(value) {
+      if (value === 'PASS') return 'Potwierdzone';
+      if (value === 'FAIL') return 'Brak';
+      if (value === 'UNKNOWN') return 'Nieustalone';
+      return value || 'Nieustalone';
+    }
+
     function getFilteredRecords() {
       const code = el('searchCode').value.trim().toUpperCase();
       const rooms = el('filterRooms').value;
@@ -279,6 +299,12 @@
         `Znaleziono: ${records.length} z ${apartments.length}` +
         (priceMax ? ` | Cena do: ${priceMax} PLN` : '');
 
+      const visibleVerifiedCount = records.filter(item =>
+        item.identity_status === 'PASS' && item.evidence_status === 'PASS'
+      ).length;
+      el('displayedCount').textContent = records.length;
+      el('displayedVerifiedCount').textContent = visibleVerifiedCount;
+
       el('rows').innerHTML = records.map(item => `
         <tr>
           <td><strong>${item.apartment_code}</strong></td>
@@ -288,7 +314,7 @@
           <td>${number.format(item.area_m2)} m²</td>
           <td>${money.format(item.price_pln)}</td>
           <td>${money.format(item.price_per_m2_pln)}</td>
-          <td>${item.availability}</td>
+          <td>${availabilityLabel(item.availability)}</td>
           <td><a href="${item.source_url}" target="_blank" rel="noopener">Skanska</a></td>
         </tr>
       `).join('');
@@ -350,9 +376,10 @@
         el('summary').innerHTML = `
           <div class="card"><strong>Deweloper</strong><br>${latest.developer}</div>
           <div class="card"><strong>Projekt</strong><br>${latest.project}</div>
-          <div class="card"><strong>Liczba lokali</strong><br>${latest.count}</div>
-          <div class="card"><strong>Verified PASS</strong><br>${latest.verified_pass_count}</div>
-          <div class="card"><strong>Prawa do 2D</strong><br><span class="warn">${latest.floorplan_rights_status}</span></div>
+          <div class="card"><strong>Wyświetlane lokale</strong><br><span id="displayedCount">${apartments.length}</span></div>
+          <div class="card"><strong>Łącznie w ofercie</strong><br>${latest.count}</div>
+          <div class="card"><strong>Zweryfikowane poprawnie</strong><br><span id="displayedVerifiedCount">${latest.verified_pass_count}</span></div>
+          <div class="card"><strong>Prawa do rzutu 2D</strong><br><span class="warn">${rightsLabel(latest.floorplan_rights_status)}</span></div>
         `;
 
         fillSelect('filterRooms', uniqueSorted(apartments.map(item => item.rooms)));
@@ -368,17 +395,17 @@
         availabilitySelect.innerHTML =
           '<option value="">Wszystkie</option>' +
           availabilityValues.map(value =>
-            `<option value="${value}">${value}</option>`
+            `<option value="${value}">${availabilityLabel(value)}</option>`
           ).join('');
 
         renderRows();
 
         const s = changes.summary || {};
         el('changes').innerHTML = `
-          ADDED: <strong>${s.ADDED ?? 0}</strong> |
-          REMOVED: <strong>${s.REMOVED ?? 0}</strong> |
-          CHANGED: <strong>${s.CHANGED ?? 0}</strong> |
-          UNCHANGED: <strong>${s.UNCHANGED ?? 0}</strong>
+          DODANE: <strong>${s.ADDED ?? 0}</strong> |
+          USUNIĘTE: <strong>${s.REMOVED ?? 0}</strong> |
+          ZMIENIONE: <strong>${s.CHANGED ?? 0}</strong> |
+          BEZ ZMIAN: <strong>${s.UNCHANGED ?? 0}</strong>
         `;
       } catch (err) {
         status.innerHTML = '<span class="error">' + err.message + '</span>';
