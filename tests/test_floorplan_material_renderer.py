@@ -18,7 +18,7 @@ def test_scene_contains_test_materials_and_lighting():
     assert "oak_light_test" in preset["materials"]
     assert preset["lighting"]["ambient_intensity"] > 0
     assert preset["lighting"]["window_light_intensity"] > 0
-    assert len(preset["staging_objects"]) == 2
+    assert len(preset["staging_objects"]) == 4
 
 
 def test_geometry_objects_keep_material_ids():
@@ -36,6 +36,8 @@ def test_material_renderer_builds_self_contained_html():
     assert "Etap 5E: materiały i światło" in html
     assert "TEST_STAGING" in html
     assert "Meble testowe" in html
+    assert "Sofa: oliwkowa" in html
+    assert "Fotel: terakota" in html
     assert "drawWindowGlow" in html
     assert "drawSoftShadow" in html
     assert "__PAYLOAD_JSON__" not in html
