@@ -200,7 +200,7 @@ function drawBox(o, index) {{
     ctx.stroke();
   }}
 
-  if (o.type === 'room_floor') {
+  if (o.type === 'room_floor') {{
     const label = project([
       o.origin_m[0] + o.size_m[0] / 2,
       o.origin_m[1] + o.size_m[1] / 2,
@@ -210,7 +210,7 @@ function drawBox(o, index) {{
     ctx.font = '600 13px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(o.name, label[0], label[1]);
-  }
+  }}
 }}
 
 function drawGround() {{
