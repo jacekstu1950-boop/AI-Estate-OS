@@ -87,7 +87,7 @@ def test_3d_scene_contains_floors_and_architectural_walls():
     walls = [obj for obj in scene["objects"] if obj["type"] == "wall_segment"]
 
     assert len(floors) == 4
-    assert len(walls) == 11
+    assert len(walls) == 12
 
     living = next(obj for obj in floors if obj["id"] == "floor-room-living")
     assert living["origin_m"] == [0.6, 0.6, -0.05]
