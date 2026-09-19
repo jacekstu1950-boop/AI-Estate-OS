@@ -40,6 +40,12 @@ def extract_apartment_data(text, apartment_code, source_url):
         "area_m2": None,
         "price_pln": None,
         "price_per_m2_pln": None,
+        "previous_price_pln": None,
+        "previous_price_per_m2_pln": None,
+        "lowest_price_30d_before_reduction_pln": None,
+        "lowest_price_per_m2_30d_before_reduction_pln": None,
+        "special_offer": False,
+        "garden_m2": None,
         "availability": None,
         "source_url": source_url,
         "retrieved_at": datetime.now().isoformat(timespec="seconds"),
@@ -85,21 +91,60 @@ def extract_apartment_data(text, apartment_code, source_url):
     if match:
         result["area_m2"] = parse_pl_number(match.group(1))
 
-    match = re.search(
-        r"Cena lokalu.*?([\d\s]+[.,]\d{2})\s*zł",
+    price_section = re.search(
+        r"Cena lokalu(.*?)(?:Cena za 1m|Miejsce postojowe|Boks rowerowy|Prospekt informacyjny)",
         normalized,
         re.IGNORECASE,
     )
-    if match:
-        result["price_pln"] = parse_pl_number(match.group(1))
+    if price_section:
+        values = re.findall(r"([\d\s]+[.,]\d{2})\s*zł", price_section.group(1))
+        parsed = [parse_pl_number(value) for value in values if parse_pl_number(value) is not None]
+        if parsed:
+            result["price_pln"] = parsed[0]
+        if len(parsed) >= 2:
+            result["previous_price_pln"] = parsed[0]
+            result["price_pln"] = parsed[1]
+
+        lowest = re.search(
+            r"Najniższa cena z 30 dni przed obniżką:\s*([\d\s]+[.,]\d{2})\s*zł",
+            price_section.group(1),
+            re.IGNORECASE,
+        )
+        if lowest:
+            result["lowest_price_30d_before_reduction_pln"] = parse_pl_number(lowest.group(1))
+
+    ppm_section = re.search(
+        r"Cena za 1m(?:2|²|\^\{2\})?(.*?)(?:Miejsce postojowe|Boks rowerowy|Prospekt informacyjny)",
+        normalized,
+        re.IGNORECASE,
+    )
+    if ppm_section:
+        values = re.findall(r"([\d\s]+[.,]\d{2})\s*zł", ppm_section.group(1))
+        parsed = [parse_pl_number(value) for value in values if parse_pl_number(value) is not None]
+        if parsed:
+            result["price_per_m2_pln"] = parsed[0]
+        if len(parsed) >= 2:
+            result["previous_price_per_m2_pln"] = parsed[0]
+            result["price_per_m2_pln"] = parsed[1]
+
+        lowest = re.search(
+            r"Najniższa cena z 30 dni przed obniżką:\s*([\d\s]+[.,]\d{2})\s*zł",
+            ppm_section.group(1),
+            re.IGNORECASE,
+        )
+        if lowest:
+            result["lowest_price_per_m2_30d_before_reduction_pln"] = parse_pl_number(lowest.group(1))
+
+    if re.search(r"\bOferta specjalna\b", normalized, re.IGNORECASE):
+        result["special_offer"] = True
 
     match = re.search(
-        r"Cena za 1m.*?([\d\s]+[.,]\d{2})\s*zł",
+        r"Ogródek\s+(\d+[.,]\d+)\s*m",
         normalized,
         re.IGNORECASE,
     )
     if match:
-        result["price_per_m2_pln"] = parse_pl_number(match.group(1))
+        result["garden_m2"] = parse_pl_number(match.group(1))
 
     if re.search(r"\bDostępne\b", normalized, re.IGNORECASE):
         result["availability"] = "available"
