@@ -92,6 +92,37 @@
       padding: 28px;
       color: #6b7280;
     }
+    .active-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 14px;
+    }
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: auto;
+      min-height: 34px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      color: #111827;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .filter-chip button {
+      width: auto;
+      min-height: 24px;
+      padding: 0 6px;
+      border: 0;
+      background: transparent;
+      color: #6b7280;
+      font-size: 18px;
+      line-height: 1;
+    }
   </style>
 </head>
 <body>
@@ -172,6 +203,9 @@
         <div>
           <button id="resetFilters" type="button">Wyczyść filtry</button>
         </div>
+      </div>
+      <div id="activeFilters" class="active-filters">
+        <span class="muted">Brak aktywnych filtrów.</span>
       </div>
     </div>
 
@@ -260,6 +294,67 @@
       return value || 'Nieustalone';
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function getActiveFilters() {
+      const filters = [
+        ['searchCode', 'Kod lokalu', el('searchCode').value.trim()],
+        ['filterRooms', 'Pokoje', el('filterRooms').value],
+        ['filterFloor', 'Piętro', el('filterFloor').value],
+        ['filterAvailability', 'Dostępne', el('filterAvailability').value
+          ? availabilityLabel(el('filterAvailability').value)
+          : ''],
+        ['areaMin', 'Metraż od', el('areaMin').value.trim()
+          ? el('areaMin').value.trim() + ' m²'
+          : ''],
+        ['areaMax', 'Metraż do', el('areaMax').value.trim()
+          ? el('areaMax').value.trim() + ' m²'
+          : ''],
+        ['priceMin', 'Cena od', el('priceMin').value.trim()
+          ? el('priceMin').value.trim() + ' PLN'
+          : ''],
+        ['priceMax', 'Cena do', el('priceMax').value.trim()
+          ? el('priceMax').value.trim() + ' PLN'
+          : '']
+      ];
+
+      return filters.filter(([, , value]) => value !== '');
+    }
+
+    function renderActiveFilters() {
+      const container = el('activeFilters');
+      const active = getActiveFilters();
+
+      if (active.length === 0) {
+        container.innerHTML = '<span class="muted">Brak aktywnych filtrów.</span>';
+        return;
+      }
+
+      container.innerHTML =
+        '<strong>Aktywne filtry:</strong>' +
+        active.map(([id, label, value]) =>
+          '<span class="filter-chip">' +
+            escapeHtml(label) + ': ' + escapeHtml(value) +
+            '<button type="button" data-clear-filter="' + id + '" aria-label="Usuń filtr ' +
+              escapeHtml(label) + '">×</button>' +
+          '</span>'
+        ).join('');
+
+      container.querySelectorAll('[data-clear-filter]').forEach(button => {
+        button.addEventListener('click', () => {
+          el(button.dataset.clearFilter).value = '';
+          renderRows();
+        });
+      });
+    }
+
     function getFilteredRecords() {
       const code = el('searchCode').value.trim().toUpperCase();
       const rooms = el('filterRooms').value;
@@ -299,8 +394,9 @@
       const records = getFilteredRecords();
       const priceMax = el('priceMax').value.trim();
       el('resultsCount').textContent =
-        `Znaleziono: ${records.length} z ${apartments.length}` +
-        (priceMax ? ` | Cena do: ${priceMax} PLN` : '');
+        `Znaleziono: ${records.length} z ${apartments.length}`;
+
+      renderActiveFilters();
 
       const visibleVerifiedCount = records.filter(item =>
         item.identity_status === 'PASS' && item.evidence_status === 'PASS'
