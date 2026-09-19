@@ -123,6 +123,43 @@
       font-size: 18px;
       line-height: 1;
     }
+    .compare-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+    .compare-bar button {
+      width: auto;
+      min-width: 180px;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .compare-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .compare-card h3 { margin-top: 0; }
+    .compare-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .compare-row:last-child { border-bottom: 0; }
+    .compare-select {
+      width: 18px;
+      min-height: 18px;
+    }
   </style>
 </head>
 <body>
@@ -214,10 +251,24 @@
       <div id="resultsCount" class="muted"></div>
     </div>
 
+    <div class="compare-bar">
+      <div id="compareStatus" class="muted">Wybierz 2 lub 3 mieszkania do porównania.</div>
+      <button id="compareButton" type="button" disabled>Porównaj wybrane</button>
+    </div>
+
+    <div id="comparisonPanel" class="card" hidden>
+      <div class="results-bar" style="margin-top:0">
+        <h2 style="margin:0">Porównanie mieszkań</h2>
+        <button id="clearComparison" type="button" style="width:auto">Wyczyść porównanie</button>
+      </div>
+      <div id="comparisonGrid" class="compare-grid"></div>
+    </div>
+
     <div class="card table-wrap">
       <table>
         <thead>
           <tr>
+            <th>Porównaj</th>
             <th>Kod</th>
             <th>Budynek</th>
             <th>Piętro</th>
@@ -251,6 +302,7 @@
     });
 
     let apartments = [];
+    const selectedForComparison = new Set();
 
     const el = id => document.getElementById(id);
 
@@ -406,6 +458,7 @@
 
       el('rows').innerHTML = records.map(item => `
         <tr>
+          <td><input class="compare-select" type="checkbox" data-compare-code="${item.apartment_code}" ${selectedForComparison.has(item.apartment_code) ? 'checked' : ''}></td>
           <td><a href="/mieszkanie/${encodeURIComponent(item.apartment_code)}"><strong>${item.apartment_code}</strong></a></td>
           <td>${item.building ?? ''}</td>
           <td>${item.floor ?? ''}</td>
@@ -419,6 +472,63 @@
       `).join('');
 
       el('emptyState').hidden = records.length !== 0;
+
+      document.querySelectorAll('[data-compare-code]').forEach(input => {
+        input.addEventListener('change', event => {
+          const code = event.target.dataset.compareCode;
+          if (event.target.checked) {
+            if (selectedForComparison.size >= 3) {
+              event.target.checked = false;
+              return;
+            }
+            selectedForComparison.add(code);
+          } else {
+            selectedForComparison.delete(code);
+          }
+          updateCompareControls();
+        });
+      });
+
+      updateCompareControls();
+    }
+
+    function updateCompareControls() {
+      const count = selectedForComparison.size;
+      el('compareStatus').textContent =
+        count === 0
+          ? 'Wybierz 2 lub 3 mieszkania do porównania.'
+          : `Wybrano: ${count} z maksymalnie 3 mieszkań.`;
+      el('compareButton').disabled = count < 2 || count > 3;
+    }
+
+    function renderComparison() {
+      const selected = apartments.filter(item =>
+        selectedForComparison.has(item.apartment_code)
+      );
+
+      if (selected.length < 2 || selected.length > 3) return;
+
+      el('comparisonGrid').innerHTML = selected.map(item => `
+        <div class="compare-card">
+          <h3><a href="/mieszkanie/${encodeURIComponent(item.apartment_code)}">${item.apartment_code}</a></h3>
+          <div class="compare-row"><span>Cena</span><strong>${money.format(item.price_pln)}</strong></div>
+          <div class="compare-row"><span>Metraż</span><strong>${number.format(item.area_m2)} m²</strong></div>
+          <div class="compare-row"><span>Cena/m²</span><strong>${money.format(item.price_per_m2_pln)}</strong></div>
+          <div class="compare-row"><span>Pokoje</span><strong>${item.rooms ?? 'Nieustalone'}</strong></div>
+          <div class="compare-row"><span>Piętro</span><strong>${item.floor ?? 'Nieustalone'}</strong></div>
+          <div class="compare-row"><span>Budynek</span><strong>${item.building ?? 'Nieustalone'}</strong></div>
+          <div class="compare-row"><span>Dostępne</span><strong>${availabilityLabel(item.availability)}</strong></div>
+        </div>
+      `).join('');
+
+      el('comparisonPanel').hidden = false;
+    }
+
+    function clearComparison() {
+      selectedForComparison.clear();
+      el('comparisonPanel').hidden = true;
+      el('comparisonGrid').innerHTML = '';
+      renderRows();
     }
 
     function bindFilters() {
@@ -438,6 +548,8 @@
       });
 
       el('applyFilters').addEventListener('click', renderRows);
+      el('compareButton').addEventListener('click', renderComparison);
+      el('clearComparison').addEventListener('click', clearComparison);
 
       el('resetFilters').addEventListener('click', () => {
         el('searchCode').value = '';
