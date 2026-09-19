@@ -92,3 +92,12 @@ def test_3d_scene_contains_floors_and_architectural_walls():
     living = next(obj for obj in floors if obj["id"] == "floor-room-living")
     assert living["origin_m"] == [0.6, 0.6, -0.05]
     assert living["size_m"] == [4.25, 2.95, 0.05]
+
+
+def test_living_window_has_corrected_test_proportions():
+    model = parse_test_floorplan(FIXTURE)
+    window = next(x for x in model["openings"] if x["id"] == "window-living")
+
+    assert window["width_cm"] == 160
+    assert window["height_cm"] == 120
+    assert window["sill_cm"] == 90
