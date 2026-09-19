@@ -1,0 +1,13 @@
+{
+  "developer": "Skanska",
+  "project": "Stilla",
+  "status": "BLOCKED_PENDING_WRITTEN_CONSENT",
+  "checked_at": "2026-09-19",
+  "source_url": "https://mieszkaj.skanska.pl/nasze-projekty/stilla/BA0003/",
+  "public_notice": "Materiały na stronie, w tym elementy graficzne, są chronione prawem autorskim; kopiowanie, opracowywanie i udostępnianie wymaga pisemnej zgody Skanska.",
+  "automated_floorplan_download_allowed": false,
+  "automated_floorplan_transformation_allowed": false,
+  "public_republication_allowed": false,
+  "required_evidence": "Pisemna zgoda Skanska Residential Development Poland Sp. z o.o. określająca zakres dozwolonego użycia.",
+  "operational_note": "Do czasu uzyskania i zapisania zgody system nie może automatycznie pobierać, kopiować, przetwarzać ani publikować rzutu 2D."
+}
