@@ -302,6 +302,16 @@ def build_3d_scene(model):
         "source_rights_status": model["rights_status"],
         "geometry_validation": validation,
         "wall_height_m": model["wall_height_cm"] / 100,
+        "camera_presets": {
+            "interior_living": {
+                "status": "TEST_PRESET",
+                "position_m": [4.15, 3.15, 1.65],
+                "target_m": [2.40, 0.80, 1.35],
+                "lens_mm": 35,
+                "eye_height_m": 1.65,
+                "note": "Własny preset testowy; nie jest daną pochodzącą z rzutu 2D.",
+            }
+        },
         "objects": objects,
         "openings": model["openings"],
     }
