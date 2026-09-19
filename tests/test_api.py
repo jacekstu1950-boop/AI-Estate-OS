@@ -63,7 +63,7 @@ def test_latest_returns_verified_snapshot(tmp_path, monkeypatch):
     assert body["project"] == "Stilla"
     assert body["count"] == 2
     assert body["verified_pass_count"] == 2
-    assert body["floorplan_rights_status"] == "UNKNOWN"
+    assert body["floorplan_rights_status"] == "BLOCKED_PENDING_WRITTEN_CONSENT"
 
 
 def test_latest_returns_503_when_snapshot_missing(tmp_path, monkeypatch):
@@ -138,7 +138,7 @@ def test_apartment_detail_returns_matching_record(tmp_path, monkeypatch):
     assert body["record"]["apartment_code"] == "BA0005"
     assert body["developer"] == "Skanska"
     assert body["project"] == "Stilla"
-    assert body["floorplan_rights_status"] == "UNKNOWN"
+    assert body["floorplan_rights_status"] == "BLOCKED_PENDING_WRITTEN_CONSENT"
 
 
 def test_apartment_detail_returns_404_for_missing_code(tmp_path, monkeypatch):
@@ -163,3 +163,14 @@ def test_apartment_frontend_served(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert "Karta szczegółów mieszkania" in response.text
+
+
+def test_floorplan_rights_gate_is_blocked_without_written_consent():
+    response = client.get("/api/skanska/stilla/floorplan-rights")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "BLOCKED_PENDING_WRITTEN_CONSENT"
+    assert body["automated_floorplan_download_allowed"] is False
+    assert body["automated_floorplan_transformation_allowed"] is False
+    assert body["public_republication_allowed"] is False
