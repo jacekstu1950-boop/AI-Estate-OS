@@ -11,7 +11,9 @@ def test_renderer_accepts_owned_valid_scene():
     assert "testowy renderer 3D" in html
     assert "OWN_TEST_ASSET" in html
     assert "geometry_validation" in html
-    assert "room-living" in html
+    assert "floor-room-living" in html
+    assert "wall_segment" in html
+    assert "ściany, drzwi i okna" in html
     assert "Przeciągnij myszą" in html
 
 
