@@ -4,11 +4,12 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
-APP_VERSION = "0.2.1"
+APP_VERSION = "0.3.0"
 SNAPSHOT_DIR = Path("snapshots") / "skanska_stilla"
 LATEST_FILE = SNAPSHOT_DIR / "latest.json"
 CHANGES_FILE = SNAPSHOT_DIR / "changes_latest.json"
 WEB_INDEX = Path("web") / "index.html"
+WEB_APARTMENT = Path("web") / "apartment.html"
 
 app = FastAPI(
     title="AI-Estate-OS API",
@@ -33,18 +34,27 @@ def load_json_file(path: Path):
         ) from exc
 
 
-@app.get("/", include_in_schema=False)
-def frontend():
-    if not WEB_INDEX.exists():
-        raise HTTPException(status_code=503, detail="Brak pliku web/index.html")
+def no_cache_file(path: Path):
+    if not path.exists():
+        raise HTTPException(status_code=503, detail=f"Brak pliku {path}")
     return FileResponse(
-        WEB_INDEX,
+        path,
         headers={
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
             "Pragma": "no-cache",
             "Expires": "0",
         },
     )
+
+
+@app.get("/", include_in_schema=False)
+def frontend():
+    return no_cache_file(WEB_INDEX)
+
+
+@app.get("/mieszkanie/{apartment_code}", include_in_schema=False)
+def apartment_frontend(apartment_code: str):
+    return no_cache_file(WEB_APARTMENT)
 
 
 @app.get("/health")
@@ -76,6 +86,36 @@ def skanska_stilla_latest():
         "verified_pass_count": pass_count,
         "floorplan_rights_status": "UNKNOWN",
         "records": records,
+    }
+
+
+@app.get("/api/skanska/stilla/apartments/{apartment_code}")
+def skanska_stilla_apartment(apartment_code: str):
+    payload = load_json_file(LATEST_FILE)
+    normalized_code = apartment_code.strip().upper()
+
+    record = next(
+        (
+            item
+            for item in payload.get("records", [])
+            if str(item.get("apartment_code", "")).upper() == normalized_code
+        ),
+        None,
+    )
+
+    if record is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Nie znaleziono lokalu {normalized_code}",
+        )
+
+    return {
+        "status": "ok",
+        "developer": payload.get("developer"),
+        "project": payload.get("project"),
+        "captured_at": payload.get("captured_at"),
+        "floorplan_rights_status": "UNKNOWN",
+        "record": record,
     }
 
 
