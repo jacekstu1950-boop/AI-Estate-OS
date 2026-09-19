@@ -75,7 +75,7 @@ def build_html(scene):
 <body>
 <header>
   <h1>AI-Estate-OS — testowy renderer 3D</h1>
-  <div>Wyłącznie własny syntetyczny rzut testowy</div>
+  <div>Własny syntetyczny rzut testowy — ściany, drzwi i okna</div>
 </header>
 <main>
   <div class="card">
@@ -196,15 +196,17 @@ function drawBox(o, index) {{
     ctx.stroke();
   }}
 
-  const label = project([
-    o.origin_m[0] + o.size_m[0] / 2,
-    o.origin_m[1] + o.size_m[1] / 2,
-    o.size_m[2] + 0.08
-  ]);
-  ctx.fillStyle = '#111827';
-  ctx.font = '600 13px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText(o.name, label[0], label[1]);
+  if (o.type === 'room_floor') {
+    const label = project([
+      o.origin_m[0] + o.size_m[0] / 2,
+      o.origin_m[1] + o.size_m[1] / 2,
+      0.08
+    ]);
+    ctx.fillStyle = '#111827';
+    ctx.font = '600 13px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(o.name, label[0], label[1]);
+  }
 }}
 
 function drawGround() {{
