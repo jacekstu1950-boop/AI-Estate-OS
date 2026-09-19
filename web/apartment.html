@@ -46,13 +46,17 @@
     <div class="card">
       <h3>Najważniejsze informacje</h3>
       <div class="grid">
-        <div class="metric"><div class="label">Cena</div><div id="price" class="value"></div></div>
+        <div class="metric"><div class="label">Cena aktualna</div><div id="price" class="value"></div></div>
+        <div class="metric"><div class="label">Cena przed obniżką</div><div id="previousPrice" class="value"></div></div>
         <div class="metric"><div class="label">Powierzchnia</div><div id="area" class="value"></div></div>
-        <div class="metric"><div class="label">Cena za m²</div><div id="ppm" class="value"></div></div>
+        <div class="metric"><div class="label">Cena za m² aktualna</div><div id="ppm" class="value"></div></div>
+        <div class="metric"><div class="label">Cena za m² przed obniżką</div><div id="previousPpm" class="value"></div></div>
         <div class="metric"><div class="label">Liczba pokoi</div><div id="rooms" class="value"></div></div>
         <div class="metric"><div class="label">Piętro</div><div id="floor" class="value"></div></div>
         <div class="metric"><div class="label">Budynek</div><div id="building" class="value"></div></div>
         <div class="metric"><div class="label">Dostępne</div><div id="availability" class="value"></div></div>
+        <div class="metric"><div class="label">Oferta specjalna</div><div id="specialOffer" class="value"></div></div>
+        <div class="metric"><div class="label">Ogródek</div><div id="garden" class="value"></div></div>
       </div>
     </div>
 
@@ -122,12 +126,19 @@
       document.getElementById('title').textContent = item.apartment_code + ' — ' + data.project;
       document.getElementById('subtitle').textContent = data.developer + ' | ' + data.project;
       document.getElementById('price').textContent = money.format(item.price_pln);
+      document.getElementById('previousPrice').textContent =
+        item.previous_price_pln != null ? money.format(item.previous_price_pln) : 'Nie dotyczy';
       document.getElementById('area').textContent = number.format(item.area_m2) + ' m²';
       document.getElementById('ppm').textContent = money.format(item.price_per_m2_pln);
+      document.getElementById('previousPpm').textContent =
+        item.previous_price_per_m2_pln != null ? money.format(item.previous_price_per_m2_pln) : 'Nie dotyczy';
       document.getElementById('rooms').textContent = item.rooms ?? 'Nieustalone';
       document.getElementById('floor').textContent = item.floor ?? 'Nieustalone';
       document.getElementById('building').textContent = item.building ?? 'Nieustalone';
       document.getElementById('availability').textContent = availabilityLabel(item.availability);
+      document.getElementById('specialOffer').textContent = item.special_offer ? 'Tak' : 'Nie';
+      document.getElementById('garden').textContent =
+        item.garden_m2 != null ? number.format(item.garden_m2) + ' m²' : 'Brak danych';
       document.getElementById('identity').textContent = statusLabel(item.identity_status);
       document.getElementById('evidence').textContent = statusLabel(item.evidence_status);
       document.getElementById('rights').textContent = rightsLabel(data.floorplan_rights_status);
