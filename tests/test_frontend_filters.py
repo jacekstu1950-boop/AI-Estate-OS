@@ -84,3 +84,24 @@ def test_frontend_contains_active_filter_chips_logic():
     assert "data-clear-filter" in html
     assert "Aktywne filtry:" in html
     assert "Brak aktywnych filtrów." in html
+
+
+def test_frontend_contains_apartment_comparison():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+
+    required_markers = [
+        'id="compareStatus"',
+        'id="compareButton"',
+        'id="comparisonPanel"',
+        'id="comparisonGrid"',
+        'id="clearComparison"',
+        'data-compare-code',
+        'function updateCompareControls()',
+        'function renderComparison()',
+        'function clearComparison()',
+        'Wybierz 2 lub 3 mieszkania do porównania.',
+        'Porównanie mieszkań',
+    ]
+
+    for marker in required_markers:
+        assert marker in html
