@@ -54,14 +54,14 @@ def build_html(scene):
   body { margin:0; font-family:Arial,sans-serif; background:#e9edf2; color:#1f2937; }
   header { background:#111827; color:white; padding:18px 22px; }
   header h1 { margin:0 0 5px; font-size:22px; }
-  main { max-width:1320px; margin:0 auto; padding:20px; }
+  main { max-width:1180px; margin:0 auto; padding:20px; }
   .card { background:white; border-radius:14px; padding:16px; box-shadow:0 4px 18px rgba(0,0,0,.10); }
   .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
   button { border:1px solid #d1d5db; background:#111827; color:white; border-radius:8px; padding:9px 12px; font-weight:700; cursor:pointer; }
   .status { margin-left:auto; color:#047857; font-weight:700; }
   .muted { color:#6b7280; }
   .legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; font-size:13px; color:#4b5563; }
-  #viewport { width:100%; height:760px; display:block; border:1px solid #cbd5e1; border-radius:12px; cursor:grab; background:#dfe7ef; }
+  #viewport { width:100%; height:650px; display:block; border:1px solid #cbd5e1; border-radius:12px; cursor:grab; background:#dfe7ef; }
   #viewport:active { cursor:grabbing; }
 </style>
 </head>
@@ -81,10 +81,12 @@ def build_html(scene):
     </div>
     <canvas id="viewport"></canvas>
     <div class="legend">
-      <span>Ściany: ciepła biel testowa</span>
-      <span>Podłoga: jasny dąb testowy</span>
-      <span>Światło: ambient + symulowane światło okienne</span>
-      <span>Meble: wyłącznie aranżacja testowa</span>
+      <span>Ściany: ciepła biel</span>
+      <span>Podłoga: jasny dąb</span>
+      <span>Sofa: oliwkowa</span>
+      <span>Fotel: terakota</span>
+      <span>Dywan: piaskowy</span>
+      <span>Światło: ambient + okno</span>
     </div>
   </div>
 </main>
@@ -175,11 +177,8 @@ function rgbToCss(rgb) {
 }
 
 function materialFor(o) {
-  if (o.type === 'staging_box') {
-    if (o.material_id === 'oak_light_test') return {base_color:'#b58f5b', roughness:.68};
-    return {base_color:'#b8afa2', roughness:.82};
-  }
-  return visual.materials[o.material_id] || {base_color:'#e8e2d9', roughness:.8};
+  if (visual.materials[o.material_id]) return visual.materials[o.material_id];
+  return {base_color:'#e8e2d9', roughness:.8};
 }
 
 function lightFactor(normal, depth) {
