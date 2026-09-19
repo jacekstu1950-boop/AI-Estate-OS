@@ -189,7 +189,11 @@ function drawBox(o, index) {{
     ctx.closePath();
 
     const shade = 92 - (index % 4) * 5;
-    ctx.fillStyle = `hsl(${{205 + index * 24}} 35% ${{shade}}%)`;
+    if (o.type === 'wall_segment') {{
+      ctx.fillStyle = '#d1d5db';
+    }} else {{
+      ctx.fillStyle = `hsl(${{205 + index * 24}} 35% ${{shade}}%)`;
+    }}
     ctx.fill();
     ctx.strokeStyle = '#374151';
     ctx.lineWidth = 1.2;
