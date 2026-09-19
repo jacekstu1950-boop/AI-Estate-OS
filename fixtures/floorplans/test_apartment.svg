@@ -1,19 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
   <title>AI-Estate-OS neutral test apartment</title>
-  <desc>Original synthetic floorplan created for pipeline testing. Units: centimeters.</desc>
+  <desc>Original synthetic floorplan created for architectural pipeline testing. Units: centimeters.</desc>
   <g id="apartment" data-unit="cm" data-height-cm="270">
     <rect id="outer" x="50" y="50" width="700" height="500" fill="none" stroke="black" stroke-width="10"/>
-    <rect id="room-living" x="60" y="60" width="430" height="300" fill="none" stroke="black" stroke-width="6"
+
+    <rect id="room-living" x="60" y="60" width="425" height="295" fill="none" stroke="none"
           data-room-name="Salon z aneksem" data-room-type="living"/>
-    <rect id="room-bedroom" x="500" y="60" width="240" height="300" fill="none" stroke="black" stroke-width="6"
+    <rect id="room-bedroom" x="505" y="60" width="235" height="295" fill="none" stroke="none"
           data-room-name="Sypialnia" data-room-type="bedroom"/>
-    <rect id="room-bathroom" x="60" y="370" width="220" height="170" fill="none" stroke="black" stroke-width="6"
+    <rect id="room-bathroom" x="60" y="375" width="215" height="165" fill="none" stroke="none"
           data-room-name="Łazienka" data-room-type="bathroom"/>
-    <rect id="room-hall" x="290" y="370" width="450" height="170" fill="none" stroke="black" stroke-width="6"
+    <rect id="room-hall" x="295" y="375" width="445" height="165" fill="none" stroke="none"
           data-room-name="Przedpokój" data-room-type="hall"/>
-    <line id="door-entry" x1="515" y1="550" x2="605" y2="550" stroke="blue" stroke-width="8"
-          data-opening-type="door" data-width-cm="90" data-height-cm="210"/>
-    <line id="window-living" x1="150" y1="50" x2="350" y2="50" stroke="green" stroke-width="8"
-          data-opening-type="window" data-width-cm="200" data-sill-cm="90" data-height-cm="120"/>
+
+    <g id="walls">
+      <line id="wall-outer-top" x1="50" y1="50" x2="750" y2="50"
+            data-wall="true" data-wall-thickness-cm="10"/>
+      <line id="wall-outer-right" x1="750" y1="50" x2="750" y2="550"
+            data-wall="true" data-wall-thickness-cm="10"/>
+      <line id="wall-outer-bottom" x1="750" y1="550" x2="50" y2="550"
+            data-wall="true" data-wall-thickness-cm="10"/>
+      <line id="wall-outer-left" x1="50" y1="550" x2="50" y2="50"
+            data-wall="true" data-wall-thickness-cm="10"/>
+      <line id="wall-interior-vertical-upper" x1="495" y1="50" x2="495" y2="365"
+            data-wall="true" data-wall-thickness-cm="10"/>
+      <line id="wall-interior-horizontal" x1="50" y1="365" x2="750" y2="365"
+            data-wall="true" data-wall-thickness-cm="10"/>
+      <line id="wall-interior-vertical-lower" x1="285" y1="365" x2="285" y2="550"
+            data-wall="true" data-wall-thickness-cm="10"/>
+    </g>
+
+    <g id="openings">
+      <line id="door-entry" x1="515" y1="550" x2="605" y2="550" stroke="blue" stroke-width="8"
+            data-opening-type="door" data-wall-id="wall-outer-bottom"
+            data-width-cm="90" data-height-cm="210"/>
+      <line id="window-living" x1="150" y1="50" x2="350" y2="50" stroke="green" stroke-width="8"
+            data-opening-type="window" data-wall-id="wall-outer-top"
+            data-width-cm="200" data-sill-cm="90" data-height-cm="120"/>
+    </g>
   </g>
 </svg>
