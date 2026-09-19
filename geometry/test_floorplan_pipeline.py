@@ -201,6 +201,7 @@ def _wall_box(wall, start_cm, end_cm, z0_cm, z1_cm, suffix):
         "origin_m": [x_cm / 100, y_cm / 100, z0_cm / 100],
         "size_m": [width_cm / 100, depth_cm / 100, (z1_cm - z0_cm) / 100],
         "source_wall_id": wall["id"],
+        "material_id": "warm_white_plaster_test",
     }
 
 
@@ -292,6 +293,7 @@ def build_3d_scene(model):
                     0.05,
                 ],
                 "area_m2": room["area_m2"],
+                "material_id": "oak_light_test",
             }
         )
 
@@ -311,6 +313,51 @@ def build_3d_scene(model):
                 "eye_height_m": 1.65,
                 "note": "Własny preset testowy; nie jest daną pochodzącą z rzutu 2D.",
             }
+        },
+        "visualization_preset": {
+            "status": "TEST_STAGING",
+            "materials": {
+                "warm_white_plaster_test": {
+                    "base_color": "#eee9e1",
+                    "roughness": 0.86,
+                },
+                "oak_light_test": {
+                    "base_color": "#c9a875",
+                    "roughness": 0.68,
+                    "grain": "linear_test",
+                },
+                "glass_test": {
+                    "base_color": "#cfe8f3",
+                    "opacity": 0.28,
+                },
+            },
+            "lighting": {
+                "ambient_intensity": 0.42,
+                "window_light_intensity": 0.92,
+                "window_light_color": "#fff3dc",
+                "sun_direction": [-0.6, 0.4, -1.0],
+            },
+            "staging_objects": [
+                {
+                    "id": "test-sofa",
+                    "type": "staging_box",
+                    "name": "Sofa testowa",
+                    "origin_m": [0.95, 2.15, 0.0],
+                    "size_m": [1.85, 0.78, 0.72],
+                    "material_id": "fabric_greige_test",
+                    "status": "TEST_STAGING",
+                },
+                {
+                    "id": "test-coffee-table",
+                    "type": "staging_box",
+                    "name": "Stolik testowy",
+                    "origin_m": [1.70, 1.45, 0.0],
+                    "size_m": [0.85, 0.52, 0.38],
+                    "material_id": "oak_light_test",
+                    "status": "TEST_STAGING",
+                },
+            ],
+            "note": "Materiały, światło i meble są wyłącznie testową aranżacją wizualną; nie pochodzą z rzutu 2D.",
         },
         "objects": objects,
         "openings": model["openings"],
