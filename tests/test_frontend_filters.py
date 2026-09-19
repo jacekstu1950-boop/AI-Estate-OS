@@ -69,6 +69,7 @@ def test_apartment_detail_page_contains_required_sections():
         "Dowody źródłowe",
         "Prawa do rzutu 2D",
         "Status operacyjny 2D → 3D",
+        "Status operacyjny 2D → 3D",
         "Aktualizacja danych",
         "Otwórz ofertę dewelopera",
     ]
@@ -106,6 +107,16 @@ def test_frontend_contains_apartment_comparison():
 
     for marker in required_markers:
         assert marker in html
+
+
+def test_frontend_shows_blocked_floorplan_rights_state():
+    index_html = Path("web/index.html").read_text(encoding="utf-8")
+    detail_html = Path("web/apartment.html").read_text(encoding="utf-8")
+
+    assert "BLOCKED_PENDING_WRITTEN_CONSENT" in index_html
+    assert "Zablokowane do czasu pisemnej zgody" in index_html
+    assert "Status operacyjny 2D → 3D" in detail_html
+    assert "floorplan_rights_note" in detail_html
 
 
 def test_frontend_shows_blocked_floorplan_rights_state():
