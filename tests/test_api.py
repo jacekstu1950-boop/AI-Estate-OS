@@ -107,3 +107,59 @@ def test_changes_returns_latest_diff(tmp_path, monkeypatch):
     assert body["status"] == "OK"
     assert body["summary"]["ADDED"] == 1
     assert body["summary"]["CHANGED"] == 1
+
+
+def test_apartment_detail_returns_matching_record(tmp_path, monkeypatch):
+    latest = tmp_path / "latest.json"
+    latest.write_text(
+        json.dumps(
+            {
+                "developer": "Skanska",
+                "project": "Stilla",
+                "captured_at": "2026-09-18T17:24:37",
+                "records": [
+                    {
+                        "apartment_code": "BA0005",
+                        "price_pln": 544523.63,
+                        "identity_status": "PASS",
+                        "evidence_status": "PASS",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_app, "LATEST_FILE", latest)
+
+    response = client.get("/api/skanska/stilla/apartments/ba0005")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["record"]["apartment_code"] == "BA0005"
+    assert body["developer"] == "Skanska"
+    assert body["project"] == "Stilla"
+    assert body["floorplan_rights_status"] == "UNKNOWN"
+
+
+def test_apartment_detail_returns_404_for_missing_code(tmp_path, monkeypatch):
+    latest = tmp_path / "latest.json"
+    latest.write_text(
+        json.dumps({"developer": "Skanska", "project": "Stilla", "records": []}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_app, "LATEST_FILE", latest)
+
+    response = client.get("/api/skanska/stilla/apartments/ZZ9999")
+
+    assert response.status_code == 404
+
+
+def test_apartment_frontend_served(tmp_path, monkeypatch):
+    page = tmp_path / "apartment.html"
+    page.write_text("<html><body>Karta szczegółów mieszkania</body></html>", encoding="utf-8")
+    monkeypatch.setattr(api_app, "WEB_APARTMENT", page)
+
+    response = client.get("/mieszkanie/BA0005")
+
+    assert response.status_code == 200
+    assert "Karta szczegółów mieszkania" in response.text
