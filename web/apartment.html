@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI-Estate-OS — szczegóły mieszkania</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f7fa;color:#1f2937}
+    header{background:#111827;color:white;padding:24px}
+    header h1{margin:0 0 6px}
+    main{max-width:980px;margin:0 auto;padding:24px}
+    .card{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+    .metric{background:#f9fafb;border-radius:10px;padding:14px}
+    .label{font-size:13px;color:#6b7280;margin-bottom:4px}
+    .value{font-size:20px;font-weight:700}
+    .ok{color:#047857;font-weight:700}
+    .warn{color:#b45309;font-weight:700}
+    .error{color:#b91c1c;font-weight:700}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}
+    a.button{display:inline-block;padding:11px 14px;border-radius:8px;background:#111827;color:white;text-decoration:none;font-weight:700}
+    a.secondary{background:white;color:#111827;border:1px solid #d1d5db}
+    .muted{color:#6b7280}
+  </style>
+</head>
+<body>
+<header>
+  <h1>AI-Estate-OS</h1>
+  <div>Karta szczegółów mieszkania</div>
+</header>
+
+<main>
+  <div class="actions" style="margin-bottom:16px">
+    <a class="button secondary" href="/">← Powrót do wyszukiwarki</a>
+  </div>
+
+  <div id="status" class="card">Ładowanie danych mieszkania…</div>
+
+  <div id="details" hidden>
+    <div class="card">
+      <h2 id="title" style="margin-top:0"></h2>
+      <div id="subtitle" class="muted"></div>
+    </div>
+
+    <div class="card">
+      <h3>Najważniejsze informacje</h3>
+      <div class="grid">
+        <div class="metric"><div class="label">Cena</div><div id="price" class="value"></div></div>
+        <div class="metric"><div class="label">Powierzchnia</div><div id="area" class="value"></div></div>
+        <div class="metric"><div class="label">Cena za m²</div><div id="ppm" class="value"></div></div>
+        <div class="metric"><div class="label">Liczba pokoi</div><div id="rooms" class="value"></div></div>
+        <div class="metric"><div class="label">Piętro</div><div id="floor" class="value"></div></div>
+        <div class="metric"><div class="label">Budynek</div><div id="building" class="value"></div></div>
+        <div class="metric"><div class="label">Dostępne</div><div id="availability" class="value"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Wiarygodność danych</h3>
+      <div class="grid">
+        <div class="metric"><div class="label">Tożsamość lokalu</div><div id="identity"></div></div>
+        <div class="metric"><div class="label">Dowody źródłowe</div><div id="evidence"></div></div>
+        <div class="metric"><div class="label">Prawa do rzutu 2D</div><div id="rights"></div></div>
+        <div class="metric"><div class="label">Aktualizacja danych</div><div id="captured"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Źródło</h3>
+      <div class="actions">
+        <a id="sourceLink" class="button" target="_blank" rel="noopener">Otwórz ofertę dewelopera</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const money = new Intl.NumberFormat('pl-PL', {style:'currency', currency:'PLN'});
+  const number = new Intl.NumberFormat('pl-PL', {maximumFractionDigits:2});
+
+  function statusLabel(value) {
+    if (value === 'PASS') return 'Potwierdzone';
+    if (value === 'FAIL') return 'Nie';
+    if (value === 'UNKNOWN') return 'Nieustalone';
+    return value || 'Nieustalone';
+  }
+
+  function availabilityLabel(value) {
+    if (value === 'available') return 'Tak';
+    if (value === 'unavailable') return 'Nie';
+    return value || 'Nieustalone';
+  }
+
+  function rightsLabel(value) {
+    if (value === 'PASS') return 'Potwierdzone';
+    if (value === 'FAIL') return 'Brak';
+    if (value === 'UNKNOWN') return 'Nieustalone';
+    return value || 'Nieustalone';
+  }
+
+  function apartmentCodeFromPath() {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    return parts[parts.length - 1] || '';
+  }
+
+  async function loadApartment() {
+    const code = apartmentCodeFromPath();
+    const status = document.getElementById('status');
+
+    try {
+      const response = await fetch('/api/skanska/stilla/apartments/' + encodeURIComponent(code));
+      if (!response.ok) {
+        if (response.status === 404) throw new Error('Nie znaleziono tego lokalu.');
+        throw new Error('Błąd pobierania danych: ' + response.status);
+      }
+
+      const data = await response.json();
+      const item = data.record;
+
+      document.title = 'AI-Estate-OS — ' + item.apartment_code;
+      document.getElementById('title').textContent = item.apartment_code + ' — ' + data.project;
+      document.getElementById('subtitle').textContent = data.developer + ' | ' + data.project;
+      document.getElementById('price').textContent = money.format(item.price_pln);
+      document.getElementById('area').textContent = number.format(item.area_m2) + ' m²';
+      document.getElementById('ppm').textContent = money.format(item.price_per_m2_pln);
+      document.getElementById('rooms').textContent = item.rooms ?? 'Nieustalone';
+      document.getElementById('floor').textContent = item.floor ?? 'Nieustalone';
+      document.getElementById('building').textContent = item.building ?? 'Nieustalone';
+      document.getElementById('availability').textContent = availabilityLabel(item.availability);
+      document.getElementById('identity').textContent = statusLabel(item.identity_status);
+      document.getElementById('evidence').textContent = statusLabel(item.evidence_status);
+      document.getElementById('rights').textContent = rightsLabel(data.floorplan_rights_status);
+      document.getElementById('captured').textContent = data.captured_at || 'Nieustalone';
+      document.getElementById('sourceLink').href = item.source_url;
+
+      status.innerHTML = '<span class="ok">Dane mieszkania zostały załadowane poprawnie.</span>';
+      document.getElementById('details').hidden = false;
+    } catch (err) {
+      status.innerHTML = '<span class="error">' + err.message + '</span>';
+    }
+  }
+
+  loadApartment();
+</script>
+</body>
+</html>
