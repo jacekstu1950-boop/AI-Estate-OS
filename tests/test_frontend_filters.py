@@ -55,9 +55,14 @@ def test_apartment_detail_page_contains_required_sections():
 
     required_labels = [
         "Najważniejsze informacje",
-        "Cena za m²",
+        "Cena aktualna",
+        "Cena przed obniżką",
+        "Cena za m² aktualna",
+        "Cena za m² przed obniżką",
         "Liczba pokoi",
         "Dostępne",
+        "Oferta specjalna",
+        "Ogródek",
         "Wiarygodność danych",
         "Tożsamość lokalu",
         "Dowody źródłowe",
