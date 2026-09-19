@@ -42,3 +42,29 @@ def test_frontend_contains_filter_logic():
     assert "USUNIĘTE:" in html
     assert "ZMIENIONE:" in html
     assert "BEZ ZMIAN:" in html
+
+
+def test_frontend_links_to_apartment_details():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+
+    assert 'href="/mieszkanie/${encodeURIComponent(item.apartment_code)}"' in html
+
+
+def test_apartment_detail_page_contains_required_sections():
+    html = Path("web/apartment.html").read_text(encoding="utf-8")
+
+    required_labels = [
+        "Najważniejsze informacje",
+        "Cena za m²",
+        "Liczba pokoi",
+        "Dostępne",
+        "Wiarygodność danych",
+        "Tożsamość lokalu",
+        "Dowody źródłowe",
+        "Prawa do rzutu 2D",
+        "Aktualizacja danych",
+        "Otwórz ofertę dewelopera",
+    ]
+
+    for label in required_labels:
+        assert label in html
