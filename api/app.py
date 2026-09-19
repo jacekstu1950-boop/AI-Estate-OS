@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.5.0"
 SNAPSHOT_DIR = Path("snapshots") / "skanska_stilla"
 LATEST_FILE = SNAPSHOT_DIR / "latest.json"
 CHANGES_FILE = SNAPSHOT_DIR / "changes_latest.json"
