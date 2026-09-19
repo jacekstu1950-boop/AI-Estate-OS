@@ -28,6 +28,47 @@ def build_url(apartment_code):
     return BASE_URL.format(code=code)
 
 
+def extract_money_values(text):
+    values = re.findall(
+        r"(?<!\d)(\d{1,3}(?:[\s\xa0]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)\s*zł",
+        text,
+        re.IGNORECASE,
+    )
+    return [
+        parsed
+        for value in values
+        if (parsed := parse_pl_number(value)) is not None
+    ]
+
+
+def extract_current_previous_and_lowest(section):
+    lowest_match = re.search(
+        r"Najniższa cena z 30 dni przed obniżką:\s*"
+        r"(\d{1,3}(?:[\s\xa0]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)\s*zł",
+        section,
+        re.IGNORECASE,
+    )
+    lowest = parse_pl_number(lowest_match.group(1)) if lowest_match else None
+
+    visible_part = re.split(
+        r"Najniższa cena z 30 dni przed obniżką:",
+        section,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )[0]
+    displayed = extract_money_values(visible_part)
+
+    current = None
+    previous = None
+    if len(displayed) >= 2:
+        previous = displayed[0]
+        current = displayed[1]
+    elif displayed:
+        current = displayed[0]
+
+    return current, previous, lowest
+
+
 def extract_apartment_data(text, apartment_code, source_url):
     apartment_code = apartment_code.strip().upper()
     result = {
@@ -92,48 +133,32 @@ def extract_apartment_data(text, apartment_code, source_url):
         result["area_m2"] = parse_pl_number(match.group(1))
 
     price_section = re.search(
-        r"Cena lokalu(.*?)(?:Cena za 1m|Miejsce postojowe|Boks rowerowy|Prospekt informacyjny)",
+        r"Cena lokalu(.*?)(?=Cena za 1m|Miejsce postojowe|Boks rowerowy|Prospekt informacyjny|$)",
         normalized,
         re.IGNORECASE,
     )
     if price_section:
-        values = re.findall(r"([\d\s]+[.,]\d{2})\s*zł", price_section.group(1))
-        parsed = [parse_pl_number(value) for value in values if parse_pl_number(value) is not None]
-        if parsed:
-            result["price_pln"] = parsed[0]
-        if len(parsed) >= 2:
-            result["previous_price_pln"] = parsed[0]
-            result["price_pln"] = parsed[1]
-
-        lowest = re.search(
-            r"Najniższa cena z 30 dni przed obniżką:\s*([\d\s]+[.,]\d{2})\s*zł",
-            price_section.group(1),
-            re.IGNORECASE,
+        current, previous, lowest = extract_current_previous_and_lowest(
+            price_section.group(1)
         )
-        if lowest:
-            result["lowest_price_30d_before_reduction_pln"] = parse_pl_number(lowest.group(1))
+        result["price_pln"] = current
+        result["previous_price_pln"] = previous
+        result["lowest_price_30d_before_reduction_pln"] = lowest
 
     ppm_section = re.search(
-        r"Cena za 1m(?:2|²|\^\{2\})?(.*?)(?:Miejsce postojowe|Boks rowerowy|Prospekt informacyjny)",
+        r"Cena za 1m(?:2|²|\^\{2\})?(.*?)(?="
+        r"Miejsce postojowe|Boks rowerowy|Prospekt informacyjny|"
+        r"Budynek|Piętro|Ogródek|Dostępne|Sprzedane|Oferta specjalna|$)",
         normalized,
         re.IGNORECASE,
     )
     if ppm_section:
-        values = re.findall(r"([\d\s]+[.,]\d{2})\s*zł", ppm_section.group(1))
-        parsed = [parse_pl_number(value) for value in values if parse_pl_number(value) is not None]
-        if parsed:
-            result["price_per_m2_pln"] = parsed[0]
-        if len(parsed) >= 2:
-            result["previous_price_per_m2_pln"] = parsed[0]
-            result["price_per_m2_pln"] = parsed[1]
-
-        lowest = re.search(
-            r"Najniższa cena z 30 dni przed obniżką:\s*([\d\s]+[.,]\d{2})\s*zł",
-            ppm_section.group(1),
-            re.IGNORECASE,
+        current, previous, lowest = extract_current_previous_and_lowest(
+            ppm_section.group(1)
         )
-        if lowest:
-            result["lowest_price_per_m2_30d_before_reduction_pln"] = parse_pl_number(lowest.group(1))
+        result["price_per_m2_pln"] = current
+        result["previous_price_per_m2_pln"] = previous
+        result["lowest_price_per_m2_30d_before_reduction_pln"] = lowest
 
     if re.search(r"\bOferta specjalna\b", normalized, re.IGNORECASE):
         result["special_offer"] = True
