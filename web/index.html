@@ -310,7 +310,7 @@
 
       el('rows').innerHTML = records.map(item => `
         <tr>
-          <td><strong>${item.apartment_code}</strong></td>
+          <td><a href="/mieszkanie/${encodeURIComponent(item.apartment_code)}"><strong>${item.apartment_code}</strong></a></td>
           <td>${item.building ?? ''}</td>
           <td>${item.floor ?? ''}</td>
           <td>${item.rooms ?? ''}</td>
