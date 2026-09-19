@@ -1,4 +1,5 @@
 import json
+import math
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -23,6 +24,16 @@ class Room:
 
 def _num(value):
     return float(value)
+
+
+def _line_orientation(line):
+    x1, y1 = line["x1_cm"], line["y1_cm"]
+    x2, y2 = line["x2_cm"], line["y2_cm"]
+    if math.isclose(y1, y2):
+        return "horizontal"
+    if math.isclose(x1, x2):
+        return "vertical"
+    raise ValueError(f"Ściana {line['id']} nie jest ortogonalna.")
 
 
 def parse_test_floorplan(path):
@@ -54,15 +65,26 @@ def parse_test_floorplan(path):
             )
         )
 
+    walls = []
+    for line in apartment.findall(".//svg:line[@data-wall='true']", SVG_NS):
+        wall = {
+            "id": line.attrib["id"],
+            "x1_cm": _num(line.attrib["x1"]),
+            "y1_cm": _num(line.attrib["y1"]),
+            "x2_cm": _num(line.attrib["x2"]),
+            "y2_cm": _num(line.attrib["y2"]),
+            "thickness_cm": _num(line.attrib["data-wall-thickness-cm"]),
+        }
+        wall["orientation"] = _line_orientation(wall)
+        walls.append(wall)
+
     openings = []
-    for line in apartment.findall("svg:line", SVG_NS):
-        opening_type = line.attrib.get("data-opening-type")
-        if not opening_type:
-            continue
+    for line in apartment.findall(".//svg:line[@data-opening-type]", SVG_NS):
         openings.append(
             {
                 "id": line.attrib["id"],
-                "type": opening_type,
+                "type": line.attrib["data-opening-type"],
+                "wall_id": line.attrib["data-wall-id"],
                 "x1_cm": _num(line.attrib["x1"]),
                 "y1_cm": _num(line.attrib["y1"]),
                 "x2_cm": _num(line.attrib["x2"]),
@@ -72,13 +94,15 @@ def parse_test_floorplan(path):
                 "sill_cm": (
                     _num(line.attrib["data-sill-cm"])
                     if "data-sill-cm" in line.attrib
-                    else None
+                    else 0.0
                 ),
             }
         )
 
     if not rooms:
         raise ValueError("Rzut testowy nie zawiera żadnych pomieszczeń.")
+    if not walls:
+        raise ValueError("Rzut testowy nie zawiera żadnych ścian.")
 
     return {
         "source_type": "synthetic_test_floorplan",
@@ -92,6 +116,7 @@ def parse_test_floorplan(path):
             }
             for room in rooms
         ],
+        "walls": walls,
         "openings": openings,
     }
 
@@ -102,7 +127,8 @@ def validate_geometry(model):
     if model["rights_status"] != "OWN_TEST_ASSET":
         issues.append("Źródło nie jest oznaczone jako własny zasób testowy.")
 
-    if model["wall_height_cm"] <= 0:
+    wall_height = model["wall_height_cm"]
+    if wall_height <= 0:
         issues.append("Wysokość ścian musi być dodatnia.")
 
     room_ids = [room["room_id"] for room in model["rooms"]]
@@ -113,10 +139,133 @@ def validate_geometry(model):
         if room["width_cm"] <= 0 or room["height_cm"] <= 0:
             issues.append(f"Niepoprawne wymiary pomieszczenia {room['room_id']}.")
 
+    wall_ids = {wall["id"] for wall in model["walls"]}
+    for wall in model["walls"]:
+        if wall["thickness_cm"] <= 0:
+            issues.append(f"Niepoprawna grubość ściany {wall['id']}.")
+
+    for opening in model["openings"]:
+        if opening["wall_id"] not in wall_ids:
+            issues.append(
+                f"Otwór {opening['id']} wskazuje nieistniejącą ścianę {opening['wall_id']}."
+            )
+            continue
+        if opening["width_cm"] <= 0 or opening["height_cm"] <= 0:
+            issues.append(f"Niepoprawne wymiary otworu {opening['id']}.")
+        if opening["sill_cm"] < 0:
+            issues.append(f"Niepoprawna wysokość parapetu {opening['id']}.")
+        if opening["sill_cm"] + opening["height_cm"] > wall_height:
+            issues.append(
+                f"Otwór {opening['id']} przekracza wysokość ściany."
+            )
+
     return {
         "status": "PASS" if not issues else "FAIL",
         "issues": issues,
     }
+
+
+def _wall_axis_interval(wall):
+    if wall["orientation"] == "horizontal":
+        return sorted([wall["x1_cm"], wall["x2_cm"]])
+    return sorted([wall["y1_cm"], wall["y2_cm"]])
+
+
+def _opening_axis_interval(opening, wall):
+    if wall["orientation"] == "horizontal":
+        return sorted([opening["x1_cm"], opening["x2_cm"]])
+    return sorted([opening["y1_cm"], opening["y2_cm"]])
+
+
+def _wall_box(wall, start_cm, end_cm, z0_cm, z1_cm, suffix):
+    thickness = wall["thickness_cm"]
+    length = end_cm - start_cm
+    if length <= 0 or z1_cm <= z0_cm:
+        return None
+
+    if wall["orientation"] == "horizontal":
+        x_cm = start_cm
+        y_cm = wall["y1_cm"] - thickness / 2
+        width_cm = length
+        depth_cm = thickness
+    else:
+        x_cm = wall["x1_cm"] - thickness / 2
+        y_cm = start_cm
+        width_cm = thickness
+        depth_cm = length
+
+    return {
+        "id": f"{wall['id']}-{suffix}",
+        "type": "wall_segment",
+        "name": wall["id"],
+        "origin_m": [x_cm / 100, y_cm / 100, z0_cm / 100],
+        "size_m": [width_cm / 100, depth_cm / 100, (z1_cm - z0_cm) / 100],
+        "source_wall_id": wall["id"],
+    }
+
+
+def build_wall_segments(model):
+    wall_height = model["wall_height_cm"]
+    segments = []
+
+    openings_by_wall = {}
+    for opening in model["openings"]:
+        openings_by_wall.setdefault(opening["wall_id"], []).append(opening)
+
+    for wall in model["walls"]:
+        wall_start, wall_end = _wall_axis_interval(wall)
+        openings = sorted(
+            openings_by_wall.get(wall["id"], []),
+            key=lambda opening: _opening_axis_interval(opening, wall)[0],
+        )
+
+        cursor = wall_start
+        part = 0
+
+        for opening in openings:
+            opening_start, opening_end = _opening_axis_interval(opening, wall)
+
+            if opening_start < wall_start or opening_end > wall_end:
+                raise ValueError(
+                    f"Otwór {opening['id']} wychodzi poza ścianę {wall['id']}."
+                )
+
+            before = _wall_box(
+                wall, cursor, opening_start, 0, wall_height, f"full-{part}"
+            )
+            if before:
+                segments.append(before)
+
+            sill = opening["sill_cm"]
+            top = sill + opening["height_cm"]
+
+            below = _wall_box(
+                wall, opening_start, opening_end, 0, sill, f"below-{opening['id']}"
+            )
+            if below:
+                segments.append(below)
+
+            above = _wall_box(
+                wall,
+                opening_start,
+                opening_end,
+                top,
+                wall_height,
+                f"above-{opening['id']}",
+            )
+            if above:
+                segments.append(above)
+
+            cursor = opening_end
+            part += 1
+
+        after = _wall_box(
+            wall, cursor, wall_end, 0, wall_height, f"full-{part}"
+        )
+        if after:
+            segments.append(after)
+
+    return segments
 
 
 def build_3d_scene(model):
@@ -125,32 +274,34 @@ def build_3d_scene(model):
         raise ValueError("Model 2D nie przeszedł walidacji.")
 
     objects = []
-    height_m = model["wall_height_cm"] / 100
 
     for room in model["rooms"]:
         objects.append(
             {
-                "id": room["room_id"],
-                "type": "room_volume",
+                "id": f"floor-{room['room_id']}",
+                "type": "room_floor",
                 "name": room["name"],
                 "origin_m": [
                     room["x_cm"] / 100,
                     room["y_cm"] / 100,
-                    0.0,
+                    -0.05,
                 ],
                 "size_m": [
                     room["width_cm"] / 100,
                     room["height_cm"] / 100,
-                    height_m,
+                    0.05,
                 ],
                 "area_m2": room["area_m2"],
             }
         )
 
+    objects.extend(build_wall_segments(model))
+
     return {
-        "scene_type": "deterministic_test_3d_scene",
+        "scene_type": "architectural_test_3d_scene",
         "source_rights_status": model["rights_status"],
         "geometry_validation": validation,
+        "wall_height_m": model["wall_height_cm"] / 100,
         "objects": objects,
         "openings": model["openings"],
     }
@@ -176,11 +327,18 @@ def main():
     save_json(geometry, geometry_path)
     save_json(scene, scene_path)
 
-    print("--- TEST FLOORPLAN 2D -> GEOMETRY -> 3D ---")
+    wall_segments = [
+        obj for obj in scene["objects"] if obj["type"] == "wall_segment"
+    ]
+
+    print("--- TEST FLOORPLAN 2D -> ARCHITECTURAL GEOMETRY -> 3D ---")
     print(f"Źródło: {source}")
     print(f"Prawa: {geometry['rights_status']}")
     print(f"Walidacja: {scene['geometry_validation']['status']}")
     print(f"Pomieszczenia: {len(geometry['rooms'])}")
+    print(f"Ściany źródłowe: {len(geometry['walls'])}")
+    print(f"Segmenty ścian po wycięciu otworów: {len(wall_segments)}")
+    print(f"Otwory: {len(geometry['openings'])}")
     print(f"Geometria: {geometry_path}")
     print(f"Scena 3D: {scene_path}")
 
