@@ -17,6 +17,7 @@ def test_frontend_contains_search_and_filters():
         'id="applyFilters"',
         'id="resetFilters"',
         'id="resultsCount"',
+        'id="activeFilters"',
     ]
 
     for marker in required_ids:
@@ -73,3 +74,13 @@ def test_apartment_detail_page_contains_required_sections():
 
     for label in required_labels:
         assert label in html
+
+
+def test_frontend_contains_active_filter_chips_logic():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+
+    assert "function getActiveFilters()" in html
+    assert "function renderActiveFilters()" in html
+    assert "data-clear-filter" in html
+    assert "Aktywne filtry:" in html
+    assert "Brak aktywnych filtrów." in html
