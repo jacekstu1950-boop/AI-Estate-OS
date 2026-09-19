@@ -76,7 +76,7 @@ def build_html(scene):
       <button id="reset" type="button">Kamera startowa</button>
       <button id="toggleStaging" type="button">Meble testowe</button>
       <button id="toggleGuides" type="button">Linie pomocnicze</button>
-      <span class="muted">Przeciągnij myszą, aby zmieniać kierunek patrzenia. Rolka zmienia pole widzenia.</span>
+      <span class="muted">Widok startowy: zoom 0,5×. Przeciągnij myszą, aby zmieniać kierunek patrzenia. Rolka zmienia zoom.</span>
       <span class="status">OWN_TEST_ASSET · TEST_STAGING · PASS</span>
     </div>
     <canvas id="viewport"></canvas>
@@ -102,6 +102,7 @@ const eye = [...preset.position_m];
 let yaw = preset.yaw;
 let pitch = preset.pitch;
 let fovDeg = 54.4;
+let zoomScale = 0.5;
 let dragging = false;
 let lastX = 0;
 let lastY = 0;
@@ -138,9 +139,10 @@ function project(p) {
   if (q[2] <= 0.08) return null;
   const rect = canvas.getBoundingClientRect();
   const focal = rect.width / (2 * Math.tan((fovDeg * Math.PI / 180) / 2));
+  const scaledFocal = focal * zoomScale;
   return [
-    rect.width/2 + (q[0]/q[2])*focal,
-    rect.height/2 - (q[1]/q[2])*focal,
+    rect.width/2 + (q[0]/q[2])*scaledFocal,
+    rect.height/2 - (q[1]/q[2])*scaledFocal,
     q[2]
   ];
 }
@@ -348,13 +350,13 @@ window.addEventListener('mousemove', e => {
 });
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
-  fovDeg *= e.deltaY>0 ? 1.04 : .96;
-  fovDeg = Math.max(34,Math.min(72,fovDeg));
+  zoomScale *= e.deltaY > 0 ? 0.90 : 1.10;
+  zoomScale = Math.max(0.25, Math.min(1.50, zoomScale));
   draw();
 },{passive:false});
 
 document.getElementById('reset').addEventListener('click', () => {
-  yaw=preset.yaw; pitch=preset.pitch; fovDeg=54.4; draw();
+  yaw=preset.yaw; pitch=preset.pitch; fovDeg=54.4; zoomScale=0.5; draw();
 });
 document.getElementById('toggleStaging').addEventListener('click', () => {
   showStaging=!showStaging; draw();
