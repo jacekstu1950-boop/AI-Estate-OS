@@ -76,7 +76,7 @@ def build_html(scene):
       <button id="reset" type="button">Kamera startowa</button>
       <button id="toggleStaging" type="button">Meble testowe</button>
       <button id="toggleGuides" type="button">Linie pomocnicze</button>
-      <span class="muted">Widok startowy: zoom 0,5×. Przeciągnij myszą, aby zmieniać kierunek patrzenia. Rolka zmienia zoom.</span>
+      <span class="muted">Widok startowy: zoom 0,25×. Przeciągnij myszą, aby zmieniać kierunek patrzenia. Rolka zmienia zoom.</span>
       <span class="status">OWN_TEST_ASSET · TEST_STAGING · PASS</span>
     </div>
     <canvas id="viewport"></canvas>
@@ -102,7 +102,7 @@ const eye = [...preset.position_m];
 let yaw = preset.yaw;
 let pitch = preset.pitch;
 let fovDeg = 54.4;
-let zoomScale = 0.5;
+let zoomScale = 0.25;
 let dragging = false;
 let lastX = 0;
 let lastY = 0;
@@ -356,7 +356,7 @@ canvas.addEventListener('wheel', e => {
 },{passive:false});
 
 document.getElementById('reset').addEventListener('click', () => {
-  yaw=preset.yaw; pitch=preset.pitch; fovDeg=54.4; zoomScale=0.5; draw();
+  yaw=preset.yaw; pitch=preset.pitch; fovDeg=54.4; zoomScale=0.25; draw();
 });
 document.getElementById('toggleStaging').addEventListener('click', () => {
   showStaging=!showStaging; draw();
