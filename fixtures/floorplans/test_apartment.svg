@@ -34,9 +34,9 @@
       <line id="door-entry" x1="515" y1="550" x2="605" y2="550" stroke="blue" stroke-width="8"
             data-opening-type="door" data-wall-id="wall-outer-bottom"
             data-width-cm="90" data-height-cm="210"/>
-      <line id="window-living" x1="150" y1="50" x2="350" y2="50" stroke="green" stroke-width="8"
+      <line id="window-living" x1="170" y1="50" x2="330" y2="50" stroke="green" stroke-width="8"
             data-opening-type="window" data-wall-id="wall-outer-top"
-            data-width-cm="200" data-sill-cm="90" data-height-cm="120"/>
+            data-width-cm="160" data-sill-cm="90" data-height-cm="120"/>
     </g>
   </g>
 </svg>
