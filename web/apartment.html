@@ -66,6 +66,7 @@
         <div class="metric"><div class="label">Tożsamość lokalu</div><div id="identity"></div></div>
         <div class="metric"><div class="label">Dowody źródłowe</div><div id="evidence"></div></div>
         <div class="metric"><div class="label">Prawa do rzutu 2D</div><div id="rights"></div></div>
+        <div class="metric"><div class="label">Status operacyjny 2D → 3D</div><div id="rightsGate"></div></div>
         <div class="metric"><div class="label">Aktualizacja danych</div><div id="captured"></div></div>
       </div>
     </div>
@@ -87,6 +88,7 @@
     if (value === 'PASS') return 'Potwierdzone';
     if (value === 'FAIL') return 'Nie';
     if (value === 'UNKNOWN') return 'Nieustalone';
+    if (value === 'BLOCKED_PENDING_WRITTEN_CONSENT') return 'Zablokowane do czasu pisemnej zgody';
     return value || 'Nieustalone';
   }
 
@@ -142,6 +144,8 @@
       document.getElementById('identity').textContent = statusLabel(item.identity_status);
       document.getElementById('evidence').textContent = statusLabel(item.evidence_status);
       document.getElementById('rights').textContent = rightsLabel(data.floorplan_rights_status);
+      document.getElementById('rightsGate').textContent =
+        data.floorplan_rights_note || 'Brak dodatkowej informacji.';
       document.getElementById('captured').textContent = data.captured_at || 'Nieustalone';
       document.getElementById('sourceLink').href = item.source_url;
 
