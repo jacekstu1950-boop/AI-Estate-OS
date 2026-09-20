@@ -19,14 +19,24 @@ def build_html(scene):
     if scene.get("geometry_validation", {}).get("status") != "PASS":
         raise ValueError("Scena 3D nie przeszła walidacji geometrii.")
 
-    camera = scene.get("camera_presets", {}).get("interior_living")
+    cameras = scene.get("camera_presets", {})
     visual = scene.get("visualization_preset")
-    if not camera:
-        raise ValueError("Brak presetu kamery interior_living.")
+    required_presets = ["overview_full_apartment", "interior_living"]
+    for preset_name in required_presets:
+        if preset_name not in cameras:
+            raise ValueError(f"Brak presetu kamery: {preset_name}")
     if not visual or visual.get("status") != "TEST_STAGING":
         raise ValueError("Brak poprawnego presetu TEST_STAGING.")
 
-    yaw, pitch = _camera_angles(camera["position_m"], camera["target_m"])
+    camera_payloads = {}
+    for preset_name, camera in cameras.items():
+        yaw, pitch = _camera_angles(camera["position_m"], camera["target_m"])
+        camera_payloads[preset_name] = {
+            **camera,
+            "yaw": yaw,
+            "pitch": pitch,
+        }
+
     render_scene = {
         **scene,
         "objects": scene.get("objects", []) + visual.get("staging_objects", []),
@@ -34,11 +44,8 @@ def build_html(scene):
 
     payload = {
         "scene": render_scene,
-        "camera": {
-            **camera,
-            "yaw": yaw,
-            "pitch": pitch,
-        },
+        "cameras": camera_payloads,
+        "default_preset": "overview_full_apartment",
         "visual": visual,
     }
     payload_json = json.dumps(payload, ensure_ascii=False)
@@ -73,10 +80,12 @@ def build_html(scene):
 <main>
   <div class="card">
     <div class="toolbar">
-      <button id="reset" type="button">Kamera startowa</button>
+      <button id="presetOverview" type="button">Całe mieszkanie</button>
+      <button id="presetLiving" type="button">Wnętrze salonu</button>
+      <button id="reset" type="button">Reset bieżącego widoku</button>
       <button id="toggleStaging" type="button">Meble testowe</button>
       <button id="toggleGuides" type="button">Linie pomocnicze</button>
-      <span class="muted">Widok startowy: zoom 0,25×. Przeciągnij myszą, aby zmieniać kierunek patrzenia. Rolka zmienia zoom.</span>
+      <span class="muted">Domyślnie otwiera się całe mieszkanie. Rolka zmienia zoom.</span>
       <span class="status">OWN_TEST_ASSET · TEST_STAGING · PASS</span>
     </div>
     <canvas id="viewport"></canvas>
@@ -93,21 +102,36 @@ def build_html(scene):
 <script>
 const payload = __PAYLOAD_JSON__;
 const scene = payload.scene;
-const preset = payload.camera;
+const cameras = payload.cameras;
 const visual = payload.visual;
 const canvas = document.getElementById('viewport');
 const ctx = canvas.getContext('2d');
 
-const eye = [...preset.position_m];
-let yaw = preset.yaw;
-let pitch = preset.pitch;
-let fovDeg = 54.4;
-let zoomScale = 0.25;
+let activePresetName = payload.default_preset || 'overview_full_apartment';
+let activePreset = cameras[activePresetName];
+const eye = [...activePreset.position_m];
+let yaw = activePreset.yaw;
+let pitch = activePreset.pitch;
+let fovDeg = activePreset.lens_mm <= 24 ? 62 : 54.4;
+let zoomScale = activePreset.zoom_scale || 0.125;
 let dragging = false;
 let lastX = 0;
 let lastY = 0;
 let showGuides = false;
 let showStaging = true;
+
+function applyPreset(name) {
+  activePresetName = name;
+  activePreset = cameras[name];
+  eye[0] = activePreset.position_m[0];
+  eye[1] = activePreset.position_m[1];
+  eye[2] = activePreset.position_m[2];
+  yaw = activePreset.yaw;
+  pitch = activePreset.pitch;
+  fovDeg = activePreset.lens_mm <= 24 ? 62 : 54.4;
+  zoomScale = activePreset.zoom_scale || 0.125;
+  draw();
+}
 
 function resize() {
   const dpr = window.devicePixelRatio || 1;
@@ -351,12 +375,18 @@ window.addEventListener('mousemove', e => {
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
   zoomScale *= e.deltaY > 0 ? 0.90 : 1.10;
-  zoomScale = Math.max(0.25, Math.min(1.50, zoomScale));
+  zoomScale = Math.max(0.0625, Math.min(1.50, zoomScale));
   draw();
 },{passive:false});
 
 document.getElementById('reset').addEventListener('click', () => {
-  yaw=preset.yaw; pitch=preset.pitch; fovDeg=54.4; zoomScale=0.25; draw();
+  applyPreset(activePresetName);
+});
+document.getElementById('presetOverview').addEventListener('click', () => {
+  applyPreset('overview_full_apartment');
+});
+document.getElementById('presetLiving').addEventListener('click', () => {
+  applyPreset('interior_living');
 });
 document.getElementById('toggleStaging').addEventListener('click', () => {
   showStaging=!showStaging; draw();
