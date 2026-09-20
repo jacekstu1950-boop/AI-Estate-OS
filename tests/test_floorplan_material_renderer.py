@@ -36,6 +36,10 @@ def test_material_renderer_builds_self_contained_html():
     assert "Etap 5E: materiały i światło" in html
     assert "TEST_STAGING" in html
     assert "Meble testowe" in html
+    assert "Całe mieszkanie" in html
+    assert "Wnętrze salonu" in html
+    assert "overview_full_apartment" in html
+    assert "interior_living" in html
     assert "Sofa: oliwkowa" in html
     assert "Fotel: terakota" in html
     assert "drawWindowGlow" in html
@@ -57,3 +61,13 @@ def test_material_renderer_rejects_missing_visual_preset():
 
     with pytest.raises(ValueError, match="TEST_STAGING"):
         build_html(scene)
+
+
+def test_scene_contains_two_camera_presets():
+    scene = make_scene()
+    cameras = scene["camera_presets"]
+
+    assert cameras["overview_full_apartment"]["zoom_scale"] == 0.125
+    assert cameras["overview_full_apartment"]["lens_mm"] == 24
+    assert cameras["interior_living"]["zoom_scale"] == 0.25
+    assert cameras["interior_living"]["lens_mm"] == 35
