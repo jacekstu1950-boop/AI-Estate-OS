@@ -305,14 +305,24 @@ def build_3d_scene(model):
         "geometry_validation": validation,
         "wall_height_m": model["wall_height_cm"] / 100,
         "camera_presets": {
+            "overview_full_apartment": {
+                "status": "TEST_PRESET",
+                "position_m": [4.00, 8.20, 5.80],
+                "target_m": [4.00, 3.00, 0.80],
+                "lens_mm": 24,
+                "eye_height_m": 5.80,
+                "zoom_scale": 0.125,
+                "note": "Widok ogólny całego mieszkania. Preset testowy; nie pochodzi z rzutu 2D.",
+            },
             "interior_living": {
                 "status": "TEST_PRESET",
                 "position_m": [4.55, 3.35, 1.65],
                 "target_m": [1.45, 1.10, 1.35],
                 "lens_mm": 35,
                 "eye_height_m": 1.65,
-                "note": "Własny preset testowy; nie jest daną pochodzącą z rzutu 2D.",
-            }
+                "zoom_scale": 0.25,
+                "note": "Widok wnętrza salonu. Preset testowy; nie pochodzi z rzutu 2D.",
+            },
         },
         "visualization_preset": {
             "status": "TEST_STAGING",
