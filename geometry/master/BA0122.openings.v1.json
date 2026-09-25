@@ -1,0 +1,117 @@
+{
+  "version": "1.0",
+  "source_sha256": "c452101011e3ba110f62e4ebaa81ebd1f2539cd3c384deecaefa88bb44e5d947",
+  "coordinate_system": "SVG viewBox units; origin top-left; x right; y down",
+  "meters_per_svg_unit": 0.01842931985828394,
+  "semantics_policy": [
+    "Only source-visible architectural openings are classified.",
+    "Door/window leaf details are not invented when the SVG does not support a clean split.",
+    "Overall opening widths come from structural wall gaps / opening linework."
+  ],
+  "openings": [
+    {
+      "id": "entry_door",
+      "type": "door",
+      "subtype": "apartment_entry",
+      "wall_axis": "horizontal",
+      "wall_y_svg": 60.814,
+      "span_svg": [
+        377.858,
+        434.228
+      ],
+      "width_svg": 56.37,
+      "width_m": 1.0388607604114657,
+      "swing": "inward_into_hall",
+      "source_evidence": "top opening and swing arc in source SVG",
+      "qa": "PASS_SOURCE_DERIVED"
+    },
+    {
+      "id": "bathroom_door",
+      "type": "door",
+      "subtype": "internal_hinged",
+      "wall_axis": "vertical",
+      "wall_x_svg": 474.196,
+      "span_svg": [
+        116.266,
+        168.391
+      ],
+      "width_svg": 52.125,
+      "width_m": 0.9606282976130504,
+      "connects": [
+        "hall",
+        "bathroom"
+      ],
+      "swing": "into_hall",
+      "source_evidence": "top-level group 8 door leaf + swing arc; structural gap at bathroom wall",
+      "qa": "PASS_SOURCE_DERIVED"
+    },
+    {
+      "id": "bedroom_door",
+      "type": "door",
+      "subtype": "internal_hinged",
+      "wall_axis": "vertical",
+      "wall_x_svg": 410.258,
+      "span_svg": [
+        191.157,
+        239.498
+      ],
+      "width_svg": 48.341,
+      "width_m": 0.890891751269304,
+      "connects": [
+        "hall",
+        "bedroom"
+      ],
+      "swing": "into_hall/living-side circulation zone",
+      "source_evidence": "top-level group 10 door leaf + swing arc at main longitudinal partition",
+      "qa": "PASS_SOURCE_DERIVED"
+    },
+    {
+      "id": "living_balcony_assembly",
+      "type": "glazed_balcony_opening",
+      "subtype": "door_plus_fixed_glazing",
+      "wall_axis": "horizontal",
+      "wall_y_svg": 429.306,
+      "span_svg": [
+        236.104,
+        344.484
+      ],
+      "width_svg": 108.38,
+      "width_m": 1.9973696862408132,
+      "connects": [
+        "living_kitchen",
+        "balcony"
+      ],
+      "leaf_detail": "source shows hinged balcony leaf and adjacent glazing; exact sub-panel split not locked yet",
+      "source_evidence": "bottom wall structural gap + balcony opening linework",
+      "qa": "PASS_OVERALL_OPENING_WIDTH_SUBPANELS_PENDING"
+    },
+    {
+      "id": "bedroom_balcony_assembly",
+      "type": "glazed_balcony_opening",
+      "subtype": "door_plus_fixed_glazing",
+      "wall_axis": "horizontal",
+      "wall_y_svg": 429.306,
+      "span_svg": [
+        442.026,
+        523.34
+      ],
+      "width_svg": 81.314,
+      "width_m": 1.4985617149565003,
+      "connects": [
+        "bedroom",
+        "balcony"
+      ],
+      "leaf_detail": "source shows hinged balcony leaf and adjacent glazing; exact sub-panel split not locked yet",
+      "source_evidence": "bottom wall structural gap + balcony opening linework",
+      "qa": "PASS_OVERALL_OPENING_WIDTH_SUBPANELS_PENDING"
+    }
+  ],
+  "summary": {
+    "count": 5,
+    "entry_doors": 1,
+    "internal_hinged_doors": 2,
+    "balcony_glazed_assemblies": 2,
+    "standalone_windows_identified": 0,
+    "qa": "PASS_SEMANTIC_OPENINGS_V1"
+  }
+}
