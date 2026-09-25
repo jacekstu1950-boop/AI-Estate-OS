@@ -1,0 +1,25 @@
+{
+  "apartment_code": "BA0122",
+  "developer": "Skanska",
+  "project": "Stilla",
+  "building": "B",
+  "floor": 1,
+  "rooms_count": 2,
+  "official_area_m2": 47.49,
+  "official_balcony_area_m2": 8.50,
+  "official_page": "https://mieszkaj.skanska.pl/nasze-projekty/stilla/BA0122/",
+  "official_floorplan_svg": "https://mieszkaj.skanska.pl/app/uploads/crm-images/ST/BA0122.svg",
+  "source_status": "REMOTE_OFFICIAL_SOURCE",
+  "rights_status": "USER_CONFIRMED_PERMISSION",
+  "master_geometry_status": "SOURCE_NOT_PARSED_YET",
+  "room_areas": [],
+  "walls": [],
+  "openings": [],
+  "fixed_elements": [],
+  "furniture": [],
+  "notes": [
+    "Do not copy room dimensions or balcony area from derived/generated presentation boards.",
+    "Official current area is 47.49 m2 and official current balcony area is 8.50 m2.",
+    "Furniture remains staging-only until confirmed from the original source."
+  ]
+}
