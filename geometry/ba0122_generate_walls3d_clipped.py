@@ -4,6 +4,7 @@ from pathlib import Path
 
 SOURCE=Path("sources/skanska/stilla/BA0122.svg")
 OUT=Path("build/BA0122_walls3d_clipped_v3.html")
+OUT_4X90=Path("build/BA0122_shape_4x90_QA.html")
 
 def lname(tag):
     return tag.split("}",1)[-1]
@@ -179,9 +180,68 @@ addEventListener('resize',draw);
 </body></html>"""
     OUT.parent.mkdir(parents=True,exist_ok=True)
     OUT.write_text(html,encoding="utf-8")
+
+    qa4_html=f"""<!doctype html>
+<html><head><meta charset="utf-8"><title>BA0122 — 4x90° shape QA</title>
+<style>
+body{{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#111}}
+header{{padding:14px 18px;background:#111827;color:#fff}}
+main{{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}}
+.panel{{background:#fff;border-radius:10px;padding:10px;box-shadow:0 1px 6px #0002}}
+canvas{{width:100%;height:420px;background:#fafafa;border:1px solid #ddd}}
+.meta{{font-size:13px;color:#444;margin-top:6px}}
+</style></head><body>
+<header><b>BA0122 — kontrola samego kształtu bryły po obrocie 0° / 90° / 180° / 270°</b></header>
+<main>
+<div class="panel"><h3>0°</h3><canvas id="c0" width="720" height="420"></canvas><div class="meta" id="m0"></div></div>
+<div class="panel"><h3>90°</h3><canvas id="c90" width="720" height="420"></canvas><div class="meta" id="m90"></div></div>
+<div class="panel"><h3>180°</h3><canvas id="c180" width="720" height="420"></canvas><div class="meta" id="m180"></div></div>
+<div class="panel"><h3>270°</h3><canvas id="c270" width="720" height="420"></canvas><div class="meta" id="m270"></div></div>
+</main>
+<script>
+const wallSvg={wall_svg_json};
+const SCALE=0.01842931985828394, H=2.70, SY=0.58, ZH=0.82;
+
+function svgImage(){{
+ return new Promise((resolve,reject)=>{{
+  const blob=new Blob([wallSvg],{{type:'image/svg+xml'}});
+  const url=URL.createObjectURL(blob), img=new Image();
+  img.onload=()=>{{URL.revokeObjectURL(url);resolve(img)}}; img.onerror=reject; img.src=url;
+ }});
+}}
+function scanRuns(id,w,h){{
+ const rows=[];
+ for(let y=0;y<h;y++){{const runs=[];let x=0;while(x<w){{if(id.data[(y*w+x)*4+3]<64){{x++;continue}}const x0=x;while(x<w&&id.data[(y*w+x)*4+3]>=64)x++;runs.push([x0,x])}}rows.push(runs)}}
+ const active=new Map(),out=[];
+ for(let y=0;y<h;y++){{const now=new Map();for(const [x0,x1] of rows[y]){{const k=x0+','+x1;if(active.has(k)){{const r=active.get(k);r.y1=y+1;now.set(k,r)}}else now.set(k,{{x0,x1,y0:y,y1:y+1}})}}for(const [k,r] of active)if(!now.has(k))out.push(r);active.clear();for(const [k,r] of now)active.set(k,r)}}
+ for(const r of active.values())out.push(r);return out;
+}}
+function bounds(rects){{let a=[Infinity,Infinity,-Infinity,-Infinity];for(const r of rects){{a[0]=Math.min(a[0],r.x0);a[1]=Math.min(a[1],r.y0);a[2]=Math.max(a[2],r.x1);a[3]=Math.max(a[3],r.y1)}}return a}}
+function faces(r){{const x0=r.x0*SCALE,x1=r.x1*SCALE,y0=r.y0*SCALE,y1=r.y1*SCALE,z0=0,z1=H;const v=[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];return [[0,1,2,3],[4,7,6,5],[0,4,5,1],[1,5,6,2],[2,6,7,3],[3,7,4,0]].map(f=>f.map(i=>v[i]))}}
+function render(canvas,meta,rects,b,deg){{
+ const ctx=canvas.getContext('2d'),yaw=deg*Math.PI/180;
+ const cx=((b[0]+b[2])/2)*SCALE,cy=((b[1]+b[3])/2)*SCALE;
+ const polys=[];let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+ function proj(p){{let x=p[0]-cx,y=p[1]-cy,z=p[2]-H/2;const ca=Math.cos(yaw),sa=Math.sin(yaw);const xr=ca*x-sa*y,yr=sa*x+ca*y;return [xr,yr*SY-z*ZH,yr]}}
+ for(const r of rects)for(const face of faces(r)){{const pp=face.map(proj);for(const p of pp){{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1])}}polys.push({{p:pp,d:pp.reduce((s,p)=>s+p[2],0)/pp.length}})}}
+ const pad=28,zw=(canvas.width-2*pad)/(maxX-minX),zh=(canvas.height-2*pad)/(maxY-minY),z=Math.min(zw,zh);
+ const ox=canvas.width/2-(minX+maxX)/2*z,oy=canvas.height/2-(minY+maxY)/2*z;
+ ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fafafa';ctx.fillRect(0,0,canvas.width,canvas.height);
+ polys.sort((a,b)=>a.d-b.d);
+ for(const q of polys){{ctx.beginPath();ctx.moveTo(ox+q.p[0][0]*z,oy+q.p[0][1]*z);for(let i=1;i<q.p.length;i++)ctx.lineTo(ox+q.p[i][0]*z,oy+q.p[i][1]*z);ctx.closePath();ctx.fillStyle='#c9c9c5';ctx.fill();ctx.strokeStyle='#666';ctx.lineWidth=.5;ctx.stroke()}}
+ meta.textContent='obrys ekranu: '+(maxX-minX).toFixed(3)+' × '+(maxY-minY).toFixed(3)+' j. proj. · projekcja afiniczna, bez perspektywy';
+}}
+(async()=>{{
+ const img=await svgImage();const tmp=document.createElement('canvas');tmp.width=750;tmp.height=563;const t=tmp.getContext('2d');t.drawImage(img,0,0,750,563);const rects=scanRuns(t.getImageData(0,0,750,563),750,563),b=bounds(rects);
+ for(const d of [0,90,180,270])render(document.getElementById('c'+d),document.getElementById('m'+d),rects,b,d);
+}})();
+</script></body></html>"""
+    OUT_4X90.write_text(qa4_html,encoding="utf-8")
+
     print("--- BA0122 CLIPPED WALL-MASS 3D v3 ---")
     print("Method: browser rasterization of exact source wall groups with clip-path preserved")
     print(f"Viewer: {OUT}")
+    print(f"4x90 shape QA: {OUT_4X90}")
     print("QA target: 2D wall-mask must visually match original SVG wall thicknesses before 3D acceptance.")
 
 if __name__=="__main__":
