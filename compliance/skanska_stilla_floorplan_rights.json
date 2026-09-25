@@ -1,13 +1,14 @@
 {
   "developer": "Skanska",
   "project": "Stilla",
-  "status": "BLOCKED_PENDING_WRITTEN_CONSENT",
-  "checked_at": "2026-09-19",
-  "source_url": "https://mieszkaj.skanska.pl/nasze-projekty/stilla/BA0003/",
-  "public_notice": "Materiały na stronie, w tym elementy graficzne, są chronione prawem autorskim; kopiowanie, opracowywanie i udostępnianie wymaga pisemnej zgody Skanska.",
-  "automated_floorplan_download_allowed": false,
-  "automated_floorplan_transformation_allowed": false,
+  "status": "USER_CONFIRMED_PERMISSION",
+  "checked_at": "2026-09-25",
+  "source_url": "https://mieszkaj.skanska.pl/nasze-projekty/stilla/BA0122/",
+  "floorplan_url": "https://mieszkaj.skanska.pl/app/uploads/crm-images/ST/BA0122.svg",
+  "permission_basis": "User reports receiving permission from a Skanska representative to use the BA0122 2D floor plan for creating 3D visualizations.",
+  "permission_evidence_archived": false,
+  "automated_floorplan_download_allowed": true,
+  "automated_floorplan_transformation_allowed": true,
   "public_republication_allowed": false,
-  "required_evidence": "Pisemna zgoda Skanska Residential Development Poland Sp. z o.o. określająca zakres dozwolonego użycia.",
-  "operational_note": "Do czasu uzyskania i zapisania zgody system nie może automatycznie pobierać, kopiować, przetwarzać ani publikować rzutu 2D."
+  "operational_note": "Use is enabled for BA0122 2D→3D work based on the user's explicit rights assertion. The actual permission document/message has not been archived in the project, so public republication remains disabled until evidence is stored."
 }
