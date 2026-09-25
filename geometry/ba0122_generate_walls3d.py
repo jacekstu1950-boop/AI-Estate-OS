@@ -292,12 +292,12 @@ def main():
 <style>html,body,#c{{width:100%;height:100%;margin:0;overflow:hidden}}#info{{position:absolute;z-index:2;left:12px;top:12px;background:#fffD;padding:10px;border-radius:8px;font:14px Arial}}</style>
 </head><body><div id="info"><b>BA0122 — ściany 3D v1</b><br>Plan: źródłowy SVG<br>Skala: zweryfikowana<br>Wysokość ścian 2.70 m: ASSUMPTION<br>Drzwi 2.10 m: ASSUMPTION<br><span id="status">Ładowanie modelu…</span></div><div id="c"></div>
 <script type="importmap">
-{
-  "imports": {
+{{
+  "imports": {{
     "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-  }
-}
+  }}
+}}
 </script>
 <script type="module">
 import * as THREE from 'three';
