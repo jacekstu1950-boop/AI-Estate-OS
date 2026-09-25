@@ -13,7 +13,7 @@
   "source_sha256": "c452101011e3ba110f62e4ebaa81ebd1f2539cd3c384deecaefa88bb44e5d947",
   "svg_viewBox": "0 0 750 563",
   "rights_status": "USER_CONFIRMED_PERMISSION",
-  "master_geometry_status": "WALL_CLIPPATH_ROOT_CAUSE_IDENTIFIED_V3_READY",
+  "master_geometry_status": "WALLS_ACCEPTED_OPENINGS_INTEGRATION_READY",
   "room_areas": [
     {
       "id": "wardrobe",
@@ -154,9 +154,10 @@
     "previous_3d_wall_model": "FAIL_HALLUCINATED_BY_OPEN_PATH_CLOSURE",
     "exact_wall_mass_strategy": "READY",
     "previous_3d_wall_model_v2": "FAIL_CLIPPATH_IGNORED",
-    "wall_mask_clip_path_preservation": "READY"
+    "wall_mask_clip_path_preservation": "READY",
+    "wall_shape_4x90": "PASS_USER_CONFIRMED"
   },
-  "next_stage": "run clipped-wall viewer; compare its exact 2D wall-mask to original source; only then accept 3D and add openings",
+  "next_stage": "integrate five source-derived openings into accepted wall geometry; add hinged-door lintels with explicit configurable vertical assumptions; preserve balcony assembly overall widths and leave subpanel split pending",
   "metric_calibration": {
     "status": "CALIBRATED",
     "method": "SOURCE_ROOM_AREA_TO_VECTOR_POLYGON",
@@ -220,13 +221,13 @@
   },
   "walls3d": {
     "generator": "geometry/ba0122_generate_walls3d_clipped.py",
-    "status": "READY_FOR_CLIPPATH_EXACT_QA",
+    "status": "ACCEPTED_4X90_USER_QA",
     "plan_geometry": "SOURCE_SVG_WALL_MASK_WITH_CLIPPATH",
     "wall_height_m": {
       "value": 2.7,
       "status": "ASSUMPTION_CONFIGURABLE"
     },
-    "acceptance_gate": "2D wall-mask must visually match original SVG before accepting 3D"
+    "acceptance_gate": "PASS_USER_CONFIRMED_0_90_180_270"
   },
   "previous_walls3d_generator": {
     "generator": "geometry/ba0122_generate_walls3d.py",
