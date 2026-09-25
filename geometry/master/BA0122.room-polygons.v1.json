@@ -230,7 +230,7 @@
       "name": "Pokój",
       "source_area_m2": 11.82,
       "status": "SOURCE_VECTOR_DERIVED",
-      "note": "Upper-left niche follows source wall faces at y=191.157/211.743; main room begins below bathroom wall at y=218.223.",
+      "note": "Source-vector wall-face polygon. Upper-left niche is retained; bathroom wall occupies x=474.196..569.158 between y=211.743..218.223.",
       "polygon_svg": [
         [
           410.258,
@@ -242,11 +242,11 @@
         ],
         [
           474.196,
-          211.743
+          218.223
         ],
         [
           569.158,
-          211.743
+          218.223
         ],
         [
           569.158,
@@ -257,11 +257,11 @@
           429.306
         ]
       ],
-      "vector_area_svg2": 35886.98836800002,
-      "calculated_area_m2": 12.188650644271695,
-      "error_m2": 0.36865064427169436,
-      "error_percent": 3.118871778948345,
-      "qa": "FAIL",
+      "vector_area_svg2": 35271.63460800001,
+      "calculated_area_m2": 11.979651997565329,
+      "error_m2": 0.15965199756532833,
+      "error_percent": 1.3506937188268047,
+      "qa": "PASS_2_PERCENT",
       "polygon_m": [
         [
           7.5607759064198525,
@@ -273,11 +273,11 @@
         ],
         [
           8.739109759518811,
-          3.9022794747526164
+          4.021701467434297
         ],
         [
           10.489194831901171,
-          3.9022794747526164
+          4.021701467434297
         ],
         [
           10.489194831901171,
@@ -292,8 +292,9 @@
   ],
   "summary": {
     "source_area_sum_m2": 47.49,
-    "calculated_area_sum_m2": 47.85741632067758,
-    "max_abs_error_percent": 3.118871778948345,
-    "qa": "REVIEW"
+    "calculated_area_sum_m2": 47.64841767397121,
+    "max_abs_error_percent": 1.3506937188268047,
+    "overall_area_error_percent": 0.33358112017521113,
+    "qa": "PASS_2_PERCENT"
   }
 }
