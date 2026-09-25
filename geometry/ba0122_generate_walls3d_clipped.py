@@ -128,12 +128,6 @@ function project(p){{
  const y2=cp*yr-sp*z, z2=sp*yr+cp*z;
  return [innerWidth/2+xr*zoom,innerHeight/2+y2*zoom,z2];
 }}
- const ca=Math.cos(yaw),sa=Math.sin(yaw);
- let x1=ca*x-sa*y, y1=sa*x+ca*y;
- const cp=Math.cos(pitch),sp=Math.sin(pitch);
- let y2=cp*y1-sp*z, z2=sp*y1+cp*z;
- return [innerWidth/2+x1*zoom,innerHeight/2+y2*zoom,z2];
-}}
 
 function facesForRect(r){{
  const x0=r.x0*SCALE,x1=r.x1*SCALE,y0=r.y0*SCALE,y1=r.y1*SCALE,z0=0,z1=H;
