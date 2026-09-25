@@ -190,29 +190,96 @@ def main():
     OUT_JSON.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf-8")
 
     payload=json.dumps([{"name":m["name"],"vertices":m["vertices"],"faces":m["faces"]} for m in meshes])
-    html=f"""<!doctype html><html><head><meta charset="utf-8"><title>BA0122 exact walls v2</title>
-<style>html,body,#c{{width:100%;height:100%;margin:0;overflow:hidden}}#info{{position:absolute;z-index:2;left:12px;top:12px;background:#fffE;padding:10px;border-radius:8px;font:14px Arial;max-width:420px}}</style>
-</head><body><div id="info"><b>BA0122 — EXACT ściany 3D v2</b><br>Źródło: wypełnione masy ścian z SVG<br>Obrysy liniowe BO…Bf: NIE są już ekstrudowane<br>Wysokość 2.70 m: ASSUMPTION<br><span id="status">Ładowanie…</span></div><div id="c"></div>
-<script type="importmap">{{{{"imports":{{{{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}}}}}}}</script>
-<script type="module">
-import * as THREE from 'three';
-import {{OrbitControls}} from 'three/addons/controls/OrbitControls.js';
+    html=f"""<!doctype html><html><head><meta charset="utf-8"><title>BA0122 exact walls v2 offline</title>
+<style>
+html,body{{width:100%;height:100%;margin:0;overflow:hidden;background:#f7f7f5;font-family:Arial,sans-serif}}
+#c{{position:absolute;inset:0;width:100%;height:100%}}
+#info{{position:absolute;z-index:2;left:12px;top:12px;background:#fffffff0;padding:10px;border-radius:8px;max-width:440px;box-shadow:0 2px 12px #0002}}
+#err{{color:#b00020;font-weight:bold}}
+</style></head>
+<body>
+<canvas id="c"></canvas>
+<div id="info">
+<b>BA0122 — EXACT ściany 3D v2 OFFLINE</b><br>
+Źródło: wypełnione masy ścian z SVG<br>
+Brak bibliotek internetowych / CDN<br>
+Wysokość 2.70 m: ASSUMPTION<br>
+<span id="status">Ładowanie modelu…</span><br>
+<span>Przeciągnij myszą: obrót 360° · rolka: zoom</span><br>
+<span id="err"></span>
+</div>
+<script>
 const data={payload};
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0xf7f7f5);
-const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.01,200);
-const renderer=new THREE.WebGLRenderer({{antialias:true}}); renderer.setSize(innerWidth,innerHeight); document.getElementById('c').appendChild(renderer.domElement);
-const controls=new OrbitControls(camera,renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xffffff,0x777777,2.0));
-const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(5,10,8);scene.add(sun);
-const mat=new THREE.MeshStandardMaterial({{color:0xd9d7d2,roughness:.9,side:THREE.DoubleSide}});
-const root=new THREE.Group();scene.add(root);
-for(const m of data){{const pos=[];for(const v of m.vertices)pos.push(v[0],v[2],-v[1]);const idx=[];for(const f of m.faces)idx.push(f[0],f[1],f[2]);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();root.add(new THREE.Mesh(g,mat));}}
-const box=new THREE.Box3().setFromObject(root),center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()),r=Math.max(size.x,size.y,size.z);
-controls.target.copy(center);camera.position.set(center.x+r*1.25,center.y+r*1.15,center.z+r*1.25);camera.far=r*20;camera.updateProjectionMatrix();controls.update();
-const grid=new THREE.GridHelper(Math.max(14,r*2.2),28,0x999999,0xdddddd);grid.position.y=box.min.y;scene.add(grid);
-document.getElementById('status').textContent='Model załadowany. Obrót: mysz, zoom: rolka.';
-function anim(){{requestAnimationFrame(anim);controls.update();renderer.render(scene,camera)}}anim();
-addEventListener('resize',()=>{{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}})
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let yaw=-0.75, pitch=0.62, zoom=80, dragging=false, lx=0, ly=0;
+
+function resize(){{
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  canvas.width=Math.floor(innerWidth*dpr);
+  canvas.height=Math.floor(innerHeight*dpr);
+  canvas.style.width=innerWidth+'px';
+  canvas.style.height=innerHeight+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}}
+addEventListener('resize',resize);
+
+let verts=[];
+for(const m of data) for(const v of m.vertices) verts.push(v);
+if(!verts.length){{
+  document.getElementById('err').textContent='BŁĄD: model nie zawiera wierzchołków.';
+}}
+const min=[Infinity,Infinity,Infinity], max=[-Infinity,-Infinity,-Infinity];
+for(const v of verts) for(let i=0;i<3;i++){{min[i]=Math.min(min[i],v[i]);max[i]=Math.max(max[i],v[i]);}}
+const center=[(min[0]+max[0])/2,(min[1]+max[1])/2,(min[2]+max[2])/2];
+const span=Math.max(max[0]-min[0],max[1]-min[1],max[2]-min[2]);
+zoom=Math.min(innerWidth,innerHeight)/Math.max(span*2.2,1);
+
+function project(v){{
+  let x=v[0]-center[0], y=v[1]-center[1], z=v[2]-center[2];
+  const cy=Math.cos(yaw), sy=Math.sin(yaw);
+  let x1=cy*x-sy*y, y1=sy*x+cy*y;
+  const cp=Math.cos(pitch), sp=Math.sin(pitch);
+  let y2=cp*y1-sp*z, z2=sp*y1+cp*z;
+  const perspective=1/(1+Math.max(-0.8,z2*0.05));
+  return [innerWidth/2+x1*zoom*perspective, innerHeight/2+y2*zoom*perspective, z2];
+}}
+
+function faceNormal(a,b,c){{
+ const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]], v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+ return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+}}
+
+function draw(){{
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  ctx.fillStyle='#f7f7f5'; ctx.fillRect(0,0,innerWidth,innerHeight);
+  const polys=[];
+  for(const m of data){{
+    for(const f of m.faces){{
+      const a=m.vertices[f[0]], b=m.vertices[f[1]], c=m.vertices[f[2]];
+      const pa=project(a), pb=project(b), pc=project(c);
+      const depth=(pa[2]+pb[2]+pc[2])/3;
+      const n=faceNormal(a,b,c);
+      const shade=Math.max(0.45,Math.min(1,0.72+0.18*(n[2]/(Math.hypot(...n)||1))));
+      polys.push({{p:[pa,pb,pc],depth,shade}});
+    }}
+  }}
+  polys.sort((a,b)=>a.depth-b.depth);
+  for(const poly of polys){{
+    const s=Math.round(220*poly.shade);
+    ctx.beginPath(); ctx.moveTo(poly.p[0][0],poly.p[0][1]); ctx.lineTo(poly.p[1][0],poly.p[1][1]); ctx.lineTo(poly.p[2][0],poly.p[2][1]); ctx.closePath();
+    ctx.fillStyle='rgb('+s+','+(s-2)+','+(s-7)+')'; ctx.fill();
+    ctx.strokeStyle='#777'; ctx.lineWidth=0.6; ctx.stroke();
+  }}
+  document.getElementById('status').textContent='Model załadowany: '+data.length+' meshów';
+}}
+
+canvas.addEventListener('mousedown',e=>{{dragging=true;lx=e.clientX;ly=e.clientY}});
+addEventListener('mouseup',()=>dragging=false);
+addEventListener('mousemove',e=>{{if(!dragging)return; yaw+=(e.clientX-lx)*0.008; pitch=Math.max(-1.45,Math.min(1.45,pitch+(e.clientY-ly)*0.008)); lx=e.clientX;ly=e.clientY;draw();}});
+canvas.addEventListener('wheel',e=>{{e.preventDefault(); zoom*=Math.exp(-e.deltaY*0.001); zoom=Math.max(8,Math.min(500,zoom)); draw();}},{{passive:false}});
+resize();
 </script></body></html>"""
     OUT_HTML.write_text(html,encoding="utf-8")
 
