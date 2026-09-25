@@ -13,7 +13,7 @@
   "source_sha256": "c452101011e3ba110f62e4ebaa81ebd1f2539cd3c384deecaefa88bb44e5d947",
   "svg_viewBox": "0 0 750 563",
   "rights_status": "USER_CONFIRMED_PERMISSION",
-  "master_geometry_status": "3D_WALL_V1_REJECTED_EXACT_SOURCE_REGENERATION_READY",
+  "master_geometry_status": "WALL_CLIPPATH_ROOT_CAUSE_IDENTIFIED_V3_READY",
   "room_areas": [
     {
       "id": "wardrobe",
@@ -152,9 +152,11 @@
     "room_polygons_max_abs_error_percent": 1.3506937188268047,
     "opening_subpanel_split": "PENDING_FOR_BALCONY_ASSEMBLIES",
     "previous_3d_wall_model": "FAIL_HALLUCINATED_BY_OPEN_PATH_CLOSURE",
-    "exact_wall_mass_strategy": "READY"
+    "exact_wall_mass_strategy": "READY",
+    "previous_3d_wall_model_v2": "FAIL_CLIPPATH_IGNORED",
+    "wall_mask_clip_path_preservation": "READY"
   },
-  "next_stage": "run geometry.ba0122_generate_walls3d_exact and visually compare top-down 3D wall projection with the original 2D SVG before adding doors/windows/furniture",
+  "next_stage": "run clipped-wall viewer; compare its exact 2D wall-mask to original source; only then accept 3D and add openings",
   "metric_calibration": {
     "status": "CALIBRATED",
     "method": "SOURCE_ROOM_AREA_TO_VECTOR_POLYGON",
@@ -217,22 +219,23 @@
     "note": "Five source-visible openings classified. Balcony assembly overall widths are locked; exact door/fixed-glazing subpanel split remains pending."
   },
   "walls3d": {
-    "generator": "geometry/ba0122_generate_walls3d_exact.py",
-    "status": "READY_FOR_SOURCE_EXACT_REGENERATION",
-    "plan_geometry": "EXACT_FILLED_SVG_WALL_MASSES",
-    "wall_source_groups": [
-      "fill #c7c8c9",
-      "fill #646566"
-    ],
-    "forbidden_method": "Do not close/extrude BO..Bf source outline strokes as solid polygons.",
+    "generator": "geometry/ba0122_generate_walls3d_clipped.py",
+    "status": "READY_FOR_CLIPPATH_EXACT_QA",
+    "plan_geometry": "SOURCE_SVG_WALL_MASK_WITH_CLIPPATH",
     "wall_height_m": {
       "value": 2.7,
       "status": "ASSUMPTION_CONFIGURABLE"
-    }
+    },
+    "acceptance_gate": "2D wall-mask must visually match original SVG before accepting 3D"
   },
   "previous_walls3d_generator": {
     "generator": "geometry/ba0122_generate_walls3d.py",
     "status": "DEPRECATED_INVALID_GEOMETRY",
     "reason": "It incorrectly treated open architectural outline paths BO..Bf as closed polygons and extruded them, producing geometry not present in the source SVG."
+  },
+  "previous_walls3d_generator_v2": {
+    "generator": "geometry/ba0122_generate_walls3d_exact.py",
+    "status": "REJECTED_SOURCE_CLIPPATH_NOT_APPLIED",
+    "reason": "Wall fill paths use class B clip-path:url(#Bz). Parsing/extruding raw path fragments ignored clip-path and produced variable thickness/splits."
   }
 }
