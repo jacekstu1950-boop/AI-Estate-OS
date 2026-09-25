@@ -301,7 +301,7 @@ def main():
 </script>
 <script type="module">
 import * as THREE from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {{OrbitControls}} from 'three/addons/controls/OrbitControls.js';
 const meshes={payload};
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0xf5f5f3);
 const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.01,100);
