@@ -290,26 +290,44 @@ def main():
     payload=json.dumps([{"name":m["name"],"vertices":m["vertices"],"faces":m["faces"]} for m in meshes])
     html=f"""<!doctype html><html><head><meta charset="utf-8"><title>BA0122 walls 3D</title>
 <style>html,body,#c{{width:100%;height:100%;margin:0;overflow:hidden}}#info{{position:absolute;z-index:2;left:12px;top:12px;background:#fffD;padding:10px;border-radius:8px;font:14px Arial}}</style>
-</head><body><div id="info"><b>BA0122 — ściany 3D v1</b><br>Plan: źródłowy SVG<br>Skala: zweryfikowana<br>Wysokość ścian 2.70 m: ASSUMPTION<br>Drzwi 2.10 m: ASSUMPTION</div><div id="c"></div>
+</head><body><div id="info"><b>BA0122 — ściany 3D v1</b><br>Plan: źródłowy SVG<br>Skala: zweryfikowana<br>Wysokość ścian 2.70 m: ASSUMPTION<br>Drzwi 2.10 m: ASSUMPTION<br><span id="status">Ładowanie modelu…</span></div><div id="c"></div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
 <script type="module">
-import * as THREE from 'https://unpkg.com/three@0.180.0/build/three.module.js';
-import {{OrbitControls}} from 'https://unpkg.com/three@0.180.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const meshes={payload};
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0xf5f5f3);
 const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.01,100);
 camera.position.set(10,8,10);
 const renderer=new THREE.WebGLRenderer({{antialias:true}}); renderer.setSize(innerWidth,innerHeight); document.getElementById('c').appendChild(renderer.domElement);
-const controls=new OrbitControls(camera,renderer.domElement); controls.target.set(6,0,5); controls.update();
+const controls=new OrbitControls(camera,renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0x777777,2.2));
 const dl=new THREE.DirectionalLight(0xffffff,2); dl.position.set(4,10,6); scene.add(dl);
 const mat=new THREE.MeshStandardMaterial({{color:0xe6e1d8,roughness:.85,side:THREE.DoubleSide}});
+const root=new THREE.Group(); scene.add(root);
 for(const m of meshes){{
  const pos=[]; for(const v of m.vertices) pos.push(v[0],v[2],-v[1]);
  const idx=[]; for(const f of m.faces) idx.push(f[0],f[1],f[2]);
  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setIndex(idx); g.computeVertexNormals();
- const mesh=new THREE.Mesh(g,mat); scene.add(mesh);
+ const mesh=new THREE.Mesh(g,mat); root.add(mesh);
 }}
-const grid=new THREE.GridHelper(14,28,0x999999,0xdddddd); scene.add(grid);
+const box=new THREE.Box3().setFromObject(root);
+const center=box.getCenter(new THREE.Vector3());
+const size=box.getSize(new THREE.Vector3());
+const radius=Math.max(size.x,size.y,size.z);
+controls.target.copy(center);
+camera.position.set(center.x + radius*1.3, center.y + radius*1.1, center.z + radius*1.3);
+camera.near=Math.max(0.01,radius/1000); camera.far=radius*20; camera.updateProjectionMatrix();
+controls.update();
+const grid=new THREE.GridHelper(Math.max(14,radius*2.2),28,0x999999,0xdddddd); grid.position.y=box.min.y; scene.add(grid);
+document.getElementById('status').textContent='Model załadowany — przeciągnij myszą, aby obracać; rolka = zoom';
 function anim(){{requestAnimationFrame(anim);controls.update();renderer.render(scene,camera)}} anim();
 addEventListener('resize',()=>{{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}})
 </script></body></html>"""
