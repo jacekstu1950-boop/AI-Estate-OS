@@ -6,20 +6,148 @@
   "floor": 1,
   "rooms_count": 2,
   "official_area_m2": 47.49,
-  "official_balcony_area_m2": 8.50,
+  "official_balcony_area_m2": 8.5,
   "official_page": "https://mieszkaj.skanska.pl/nasze-projekty/stilla/BA0122/",
   "official_floorplan_svg": "https://mieszkaj.skanska.pl/app/uploads/crm-images/ST/BA0122.svg",
-  "source_status": "REMOTE_OFFICIAL_SOURCE",
+  "source_status": "DOWNLOADED_AND_DIRECTLY_INSPECTED",
+  "source_sha256": "c452101011e3ba110f62e4ebaa81ebd1f2539cd3c384deecaefa88bb44e5d947",
+  "svg_viewBox": "0 0 750 563",
   "rights_status": "USER_CONFIRMED_PERMISSION",
-  "master_geometry_status": "SOURCE_NOT_PARSED_YET",
-  "room_areas": [],
-  "walls": [],
-  "openings": [],
-  "fixed_elements": [],
-  "furniture": [],
-  "notes": [
-    "Do not copy room dimensions or balcony area from derived/generated presentation boards.",
-    "Official current area is 47.49 m2 and official current balcony area is 8.50 m2.",
-    "Furniture remains staging-only until confirmed from the original source."
-  ]
+  "master_geometry_status": "VECTOR_LOCKED_V1_METRIC_PENDING",
+  "room_areas": [
+    {
+      "id": "wardrobe",
+      "name": "Aneks garderobiany",
+      "area_m2": 3.49,
+      "status": "SOURCE_SVG_LABEL"
+    },
+    {
+      "id": "hall",
+      "name": "Przedpokój",
+      "area_m2": 4.8,
+      "status": "SOURCE_SVG_LABEL"
+    },
+    {
+      "id": "bathroom",
+      "name": "Łazienka",
+      "area_m2": 4.34,
+      "status": "SOURCE_SVG_LABEL"
+    },
+    {
+      "id": "living_kitchen",
+      "name": "Pokój dzienny z aneksem kuchennym",
+      "area_m2": 23.04,
+      "status": "SOURCE_SVG_LABEL"
+    },
+    {
+      "id": "bedroom",
+      "name": "Pokój",
+      "area_m2": 11.82,
+      "status": "SOURCE_SVG_LABEL"
+    }
+  ],
+  "room_area_sum_check": {
+    "sum_m2": 47.49,
+    "expected_m2": 47.49,
+    "status": "PASS"
+  },
+  "balcony": {
+    "source_svg_label_area_m2": 9.33,
+    "current_webpage_area_m2": 8.5,
+    "status": "CONFLICT",
+    "policy": "retain source geometry; do not force either area value until the source/version discrepancy is resolved"
+  },
+  "vector_layers": {
+    "structure": {
+      "top_level_group": 13,
+      "status": "LOCKED",
+      "principal_refs": [
+        "BO",
+        "BP",
+        "BQ",
+        "BR",
+        "BS",
+        "BT",
+        "BU",
+        "BV",
+        "BW",
+        "BX",
+        "BY",
+        "BZ",
+        "Ba",
+        "Bb",
+        "Bc",
+        "Bd",
+        "Be",
+        "Bf"
+      ]
+    },
+    "structural_masses": {
+      "top_level_groups": [
+        11,
+        12
+      ],
+      "status": "LOCKED"
+    },
+    "openings": {
+      "top_level_group": 10,
+      "status": "LOCKED_SEMANTICS_PENDING"
+    },
+    "source_furniture": {
+      "top_level_groups": [
+        3,
+        6
+      ],
+      "status": "REFERENCE_ONLY_NOT_GEOMETRY_TRUTH"
+    },
+    "labels": {
+      "top_level_group": 16,
+      "status": "REFERENCE_ONLY"
+    }
+  },
+  "topology": {
+    "status": "SOURCE_VISUALLY_VERIFIED",
+    "relations": [
+      [
+        "entrance",
+        "hall"
+      ],
+      [
+        "hall",
+        "wardrobe"
+      ],
+      [
+        "hall",
+        "bathroom"
+      ],
+      [
+        "hall",
+        "living_kitchen"
+      ],
+      [
+        "hall",
+        "bedroom"
+      ],
+      [
+        "living_kitchen",
+        "balcony"
+      ],
+      [
+        "bedroom",
+        "balcony"
+      ]
+    ]
+  },
+  "qa": {
+    "source_hash": "PASS",
+    "vector_structure_layer": "PASS",
+    "opening_layer_isolated": "PASS",
+    "furniture_isolated": "PASS",
+    "room_area_sum": "PASS",
+    "balcony_area_consistency": "FAIL_CONFLICT",
+    "metric_scale": "PENDING",
+    "room_polygons_metric": "PENDING",
+    "opening_semantics": "PENDING"
+  },
+  "next_stage": "metric calibration + semantic classification of openings + room polygons"
 }
