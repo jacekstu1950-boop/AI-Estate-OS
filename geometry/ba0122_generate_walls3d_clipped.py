@@ -43,9 +43,11 @@ button{{margin:3px;padding:6px 9px}}
 <div id="info"><b>BA0122 — ściany 3D v3</b><br>
 Źródło: oryginalne grupy ścian + oryginalny clip-path SVG<br>
 Plan nie jest rekonstruowany z trójkątów.<br>
+<b>Uwaga:</b> przy obrocie 3D prostokąt w rzucie ekranu naturalnie staje się równoległobokiem. Do kontroli geometrii użyj „Rzut 2D 1:1”.<br>
 Wysokość: 2.70 m [ASSUMPTION]<br>
 <span id="status">Rasteryzacja dokładnego wall-mask…</span><br>
-<button onclick="setTop()">Widok z góry</button>
+<button onclick="setPlan()">Rzut 2D 1:1</button>
+<button onclick="setTop3D()">Widok z góry 3D</button>
 <button onclick="setIso()">Widok 3D</button>
 </div>
 <div id="qa"><b>Dokładny wall-mask 2D</b><canvas id="mask" width="750" height="563"></canvas></div>
@@ -55,7 +57,7 @@ const SCALE=0.01842931985828394;
 const H=2.70;
 const view=document.getElementById('view'),ctx=view.getContext('2d');
 const mask=document.getElementById('mask'),mctx=mask.getContext('2d');
-let rects=[], yaw=-0.75,pitch=0.62,zoom=70,drag=false,lx=0,ly=0;
+let rects=[], yaw=-0.75,pitch=0.62,zoom=70,drag=false,lx=0,ly=0,mode='3d';
 let bounds=null;
 
 function svgImage(){{
@@ -109,8 +111,13 @@ function computeBounds(){{
 function project(p){{
  const cx=(bounds.minx+bounds.maxx)/2, cy=(bounds.miny+bounds.maxy)/2;
  let x=p[0]-cx,y=p[1]-cy,z=p[2]-H/2;
- const ca=Math.cos(yaw),sa=Math.sin(yaw); let x1=ca*x-sa*y,y1=sa*x+ca*y;
- const cp=Math.cos(pitch),sp=Math.sin(pitch); let y2=cp*y1-sp*z,z2=sp*y1+cp*z;
+ if(mode==='plan'){{
+   return [innerWidth/2+x*zoom,innerHeight/2+y*zoom,z];
+ }}
+ const ca=Math.cos(yaw),sa=Math.sin(yaw);
+ let x1=ca*x-sa*y, y1=sa*x+ca*y;
+ const cp=Math.cos(pitch),sp=Math.sin(pitch);
+ let y2=cp*y1-sp*z, z2=sp*y1+cp*z;
  return [innerWidth/2+x1*zoom,innerHeight/2+y2*zoom,z2];
 }}
 
@@ -132,12 +139,13 @@ function draw(){{
  for(const q of polys){{ctx.beginPath();ctx.moveTo(q.p[0][0],q.p[0][1]);for(let i=1;i<q.p.length;i++)ctx.lineTo(q.p[i][0],q.p[i][1]);ctx.closePath();ctx.fillStyle='#c9c9c5';ctx.fill();ctx.strokeStyle='#777';ctx.lineWidth=.45;ctx.stroke();}}
 }}
 
-function setTop(){{yaw=0;pitch=0;zoom=Math.min(innerWidth/(bounds.maxx-bounds.minx+1),innerHeight/(bounds.maxy-bounds.miny+1))*.75;draw();}}
-function setIso(){{yaw=-0.75;pitch=0.62;zoom=Math.min(innerWidth,innerHeight)/12;draw();}}
+function setPlan(){{mode='plan';yaw=0;pitch=0;zoom=Math.min(innerWidth/(bounds.maxx-bounds.minx+1),innerHeight/(bounds.maxy-bounds.miny+1))*.82;draw();}}
+function setTop3D(){{mode='3d';yaw=0;pitch=0;zoom=Math.min(innerWidth/(bounds.maxx-bounds.minx+1),innerHeight/(bounds.maxy-bounds.miny+1))*.82;draw();}}
+function setIso(){{mode='3d';yaw=-0.75;pitch=0.62;zoom=Math.min(innerWidth,innerHeight)/12;draw();}}
 
 view.addEventListener('mousedown',e=>{{drag=true;lx=e.clientX;ly=e.clientY}});
 addEventListener('mouseup',()=>drag=false);
-addEventListener('mousemove',e=>{{if(!drag)return;yaw+=(e.clientX-lx)*.008;pitch=Math.max(-1.45,Math.min(1.45,pitch+(e.clientY-ly)*.008));lx=e.clientX;ly=e.clientY;draw();}});
+addEventListener('mousemove',e=>{{if(!drag)return;if(mode==='plan'){{lx=e.clientX;ly=e.clientY;return;}}yaw+=(e.clientX-lx)*.008;pitch=Math.max(-1.45,Math.min(1.45,pitch+(e.clientY-ly)*.008));lx=e.clientX;ly=e.clientY;draw();}});
 view.addEventListener('wheel',e=>{{e.preventDefault();zoom*=Math.exp(-e.deltaY*.001);draw()}},{{passive:false}});
 addEventListener('resize',draw);
 
