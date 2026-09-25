@@ -43,12 +43,12 @@ button{{margin:3px;padding:6px 9px}}
 <div id="info"><b>BA0122 — ściany 3D v3</b><br>
 Źródło: oryginalne grupy ścian + oryginalny clip-path SVG<br>
 Plan nie jest rekonstruowany z trójkątów.<br>
-<b>Uwaga:</b> do kontroli geometrii użyj „Rzut 2D 1:1”. Tryb „360° techniczny” ma projekcję ortograficzną, stały kąt pochylenia i obrót wyłącznie wokół osi pionowej — bez efektu perspektywicznego trapezu.<br>
+<b>Uwaga:</b> do kontroli geometrii użyj „Rzut 2D 1:1”. Tryb „360° QA — równoległe ściany” używa projekcji afinicznej: przeciwległe krawędzie pozostają dokładnie równoległe i nie ma zbiegu perspektywicznego. Przy obrocie kwadrat może wyglądać jak równoległobok, ale nie powinien zwężać się jak trapez.<br>
 Wysokość: 2.70 m [ASSUMPTION]<br>
 <span id="status">Rasteryzacja dokładnego wall-mask…</span><br>
 <button onclick="setPlan()">Rzut 2D 1:1</button>
 <button onclick="setTop3D()">Widok z góry 3D</button>
-<button onclick="setTechnical360()">360° techniczny</button>
+<button onclick="setAffine360()">360° QA — równoległe ściany</button>
 <button onclick="setIso()">Widok 3D swobodny</button>
 </div>
 <div id="qa"><b>Dokładny wall-mask 2D</b><canvas id="mask" width="750" height="563"></canvas></div>
@@ -58,7 +58,7 @@ const SCALE=0.01842931985828394;
 const H=2.70;
 const view=document.getElementById('view'),ctx=view.getContext('2d');
 const mask=document.getElementById('mask'),mctx=mask.getContext('2d');
-let rects=[], yaw=-0.75,pitch=0.58,zoom=70,drag=false,lx=0,ly=0,mode='technical';
+let rects=[], yaw=-0.75,pitch=0.58,zoom=70,drag=false,lx=0,ly=0,mode='affine';
 let bounds=null;
 
 function svgImage(){{
@@ -116,6 +116,19 @@ function project(p){{
    return [innerWidth/2+x*zoom,innerHeight/2+y*zoom,z];
  }}
  const ca=Math.cos(yaw),sa=Math.sin(yaw);
+ const xr=ca*x-sa*y, yr=sa*x+ca*y;
+ if(mode==='affine'){{
+   // Pure affine / cabinet-like architectural projection:
+   // opposite plan edges stay exactly parallel; no perspective convergence.
+   const sy=0.58;
+   const zh=0.82;
+   return [innerWidth/2+xr*zoom, innerHeight/2+yr*zoom*sy-z*zoom*zh, yr];
+ }}
+ const cp=Math.cos(pitch),sp=Math.sin(pitch);
+ const y2=cp*yr-sp*z, z2=sp*yr+cp*z;
+ return [innerWidth/2+xr*zoom,innerHeight/2+y2*zoom,z2];
+}}
+ const ca=Math.cos(yaw),sa=Math.sin(yaw);
  let x1=ca*x-sa*y, y1=sa*x+ca*y;
  const cp=Math.cos(pitch),sp=Math.sin(pitch);
  let y2=cp*y1-sp*z, z2=sp*y1+cp*z;
@@ -142,7 +155,7 @@ function draw(){{
 
 function setPlan(){{mode='plan';yaw=0;pitch=0;zoom=Math.min(innerWidth/(bounds.maxx-bounds.minx+1),innerHeight/(bounds.maxy-bounds.miny+1))*.82;draw();}}
 function setTop3D(){{mode='top';yaw=0;pitch=0;zoom=Math.min(innerWidth/(bounds.maxx-bounds.minx+1),innerHeight/(bounds.maxy-bounds.miny+1))*.82;draw();}}
-function setTechnical360(){{mode='technical';pitch=0.58;zoom=Math.min(innerWidth,innerHeight)/12;draw();}}
+function setAffine360(){{mode='affine';pitch=0;zoom=Math.min(innerWidth,innerHeight)/12;draw();}}
 function setIso(){{mode='free';yaw=-0.75;pitch=0.62;zoom=Math.min(innerWidth,innerHeight)/12;draw();}}
 
 view.addEventListener('mousedown',e=>{{drag=true;lx=e.clientX;ly=e.clientY}});
@@ -152,7 +165,7 @@ addEventListener('mousemove',e=>{{
  if(mode==='plan' || mode==='top'){{lx=e.clientX;ly=e.clientY;return;}}
  yaw+=(e.clientX-lx)*.008;
  if(mode==='free') pitch=Math.max(-1.45,Math.min(1.45,pitch+(e.clientY-ly)*.008));
- if(mode==='technical') pitch=0.58;
+ if(mode==='affine') pitch=0;
  lx=e.clientX;ly=e.clientY;draw();
 }});
 view.addEventListener('wheel',e=>{{e.preventDefault();zoom*=Math.exp(-e.deltaY*.001);draw()}},{{passive:false}});
@@ -164,7 +177,7 @@ addEventListener('resize',draw);
   mctx.clearRect(0,0,750,563);mctx.drawImage(img,0,0,750,563);
   const id=mctx.getImageData(0,0,750,563);
   rects=scanRuns(id,750,563);
-  computeBounds();setTechnical360();
+  computeBounds();setAffine360();
   document.getElementById('status').textContent='Wall-mask OK · prostokąty: '+rects.length;
  }}catch(e){{document.getElementById('status').textContent='BŁĄD: '+e;console.error(e)}}
 }})();
