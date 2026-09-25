@@ -13,7 +13,7 @@
   "source_sha256": "c452101011e3ba110f62e4ebaa81ebd1f2539cd3c384deecaefa88bb44e5d947",
   "svg_viewBox": "0 0 750 563",
   "rights_status": "USER_CONFIRMED_PERMISSION",
-  "master_geometry_status": "METRIC_CALIBRATED_ROOM_POLYGONS_PASS_OPENINGS_PENDING",
+  "master_geometry_status": "METRIC_CALIBRATED_ROOM_POLYGONS_PASS_2_PERCENT_OPENINGS_PENDING",
   "room_areas": [
     {
       "id": "wardrobe",
@@ -146,10 +146,10 @@
     "room_area_sum": "PASS",
     "balcony_area_consistency": "FAIL_CONFLICT",
     "metric_scale": "PASS",
-    "room_polygons_metric": "PASS",
+    "room_polygons_metric": "PASS_2_PERCENT",
     "opening_semantics": "PENDING",
     "metric_scale_basis": "living_kitchen 23.04 m2 source label",
-    "room_polygons_max_abs_error_percent": 3.118871778948345
+    "room_polygons_max_abs_error_percent": 1.3506937188268047
   },
   "next_stage": "semantic opening classification (entry, internal doors, balcony doors/windows) + 3D wall extrusion",
   "metric_calibration": {
@@ -202,8 +202,9 @@
   },
   "room_polygons": {
     "file": "geometry/master/BA0122.room-polygons.v1.json",
-    "status": "PASS_0_5_PERCENT",
-    "max_abs_area_error_percent": 3.118871778948345,
-    "note": "Polygons derived from source wall-face coordinates. Hall/living open boundary is semantic rather than a continuous physical wall."
+    "status": "PASS_2_PERCENT",
+    "max_abs_area_error_percent": 1.3506937188268047,
+    "note": "Source-vector-derived polygons. Four rooms are within 0.5%; bedroom is within 2%. No coordinate was tuned solely to force the labeled area.",
+    "overall_area_error_percent": 0.33358112017521113
   }
 }
