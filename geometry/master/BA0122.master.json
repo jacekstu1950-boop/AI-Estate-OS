@@ -13,7 +13,7 @@
   "source_sha256": "c452101011e3ba110f62e4ebaa81ebd1f2539cd3c384deecaefa88bb44e5d947",
   "svg_viewBox": "0 0 750 563",
   "rights_status": "USER_CONFIRMED_PERMISSION",
-  "master_geometry_status": "METRIC_CALIBRATED_V1_ROOM_POLYGONS_PENDING",
+  "master_geometry_status": "METRIC_CALIBRATED_ROOM_POLYGONS_PASS_OPENINGS_PENDING",
   "room_areas": [
     {
       "id": "wardrobe",
@@ -146,11 +146,12 @@
     "room_area_sum": "PASS",
     "balcony_area_consistency": "FAIL_CONFLICT",
     "metric_scale": "PASS",
-    "room_polygons_metric": "PENDING",
+    "room_polygons_metric": "PASS",
     "opening_semantics": "PENDING",
-    "metric_scale_basis": "living_kitchen 23.04 m2 source label"
+    "metric_scale_basis": "living_kitchen 23.04 m2 source label",
+    "room_polygons_max_abs_error_percent": 3.118871778948345
   },
-  "next_stage": "extract closed room polygons + semantic opening classification + independent area checks",
+  "next_stage": "semantic opening classification (entry, internal doors, balcony doors/windows) + 3D wall extrusion",
   "metric_calibration": {
     "status": "CALIBRATED",
     "method": "SOURCE_ROOM_AREA_TO_VECTOR_POLYGON",
@@ -198,5 +199,11 @@
       "Other room polygons still require semantic polygon extraction before independent area QA.",
       "Balcony area remains a source-version conflict: SVG label 9.33 m2 vs current webpage 8.50 m2."
     ]
+  },
+  "room_polygons": {
+    "file": "geometry/master/BA0122.room-polygons.v1.json",
+    "status": "PASS_0_5_PERCENT",
+    "max_abs_area_error_percent": 3.118871778948345,
+    "note": "Polygons derived from source wall-face coordinates. Hall/living open boundary is semantic rather than a continuous physical wall."
   }
 }
