@@ -7,6 +7,7 @@ SOURCE = Path("sources/skanska/stilla/BA0122.svg")
 OUT_JSON = Path("build/BA0122_walls3d_exact_v2.json")
 OUT_OBJ = Path("build/BA0122_walls3d_exact_v2.obj")
 OUT_HTML = Path("build/BA0122_walls3d_exact_v2.html")
+OUT_QA_HTML = Path("build/BA0122_walls3d_exact_v2_qa.html")
 
 SCALE_M = 0.01842931985828394
 WALL_HEIGHT_M = 2.70  # configurable assumption; not encoded in 2D SVG
@@ -283,6 +284,52 @@ resize();
 </script></body></html>"""
     OUT_HTML.write_text(html,encoding="utf-8")
 
+    # Exact top-down QA: source SVG on the left; extracted wall polygons on the right.
+    # This view is orthographic and contains no 3D perspective, so rectangles remain rectangles.
+    wall_polys = json.dumps([
+        rec["polygon_svg"] for rec in records
+    ], ensure_ascii=False)
+    source_svg = SOURCE.read_text(encoding="utf-8")
+    qa_html = f"""<!doctype html>
+<html><head><meta charset="utf-8"><title>BA0122 2D vs Master Geometry QA</title>
+<style>
+body{{margin:0;font-family:Arial,sans-serif;background:#eef2f7}}
+header{{padding:12px 16px;background:#111827;color:#fff}}
+main{{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}}
+.panel{{background:#fff;border-radius:10px;padding:10px;overflow:auto}}
+h3{{margin:0 0 8px}}
+svg{{width:100%;height:auto;display:block}}
+canvas{{width:100%;height:auto;background:#fff;border:1px solid #ddd}}
+.note{{padding:8px 12px;background:#fff4cc;border-left:4px solid #d7a500;margin:12px}}
+</style></head>
+<body>
+<header><b>BA0122 — kontrola 2D vs Master Geometry</b></header>
+<div class="note">To jest widok ortogonalny z góry. Brak perspektywy 3D. Jeżeli prawa strona różni się od ścian po lewej, parser ścian jest błędny.</div>
+<main>
+<div class="panel"><h3>1. Oryginalny BA0122.svg</h3>{source_svg}</div>
+<div class="panel"><h3>2. Wyekstrahowane masy ścian — bez perspektywy</h3><canvas id="qa" width="750" height="563"></canvas></div>
+</main>
+<script>
+const polys={wall_polys};
+const canvas=document.getElementById('qa'),ctx=canvas.getContext('2d');
+ctx.clearRect(0,0,750,563);
+ctx.fillStyle='#fff';ctx.fillRect(0,0,750,563);
+ctx.fillStyle='#666';
+ctx.strokeStyle='#111';
+ctx.lineWidth=0.8;
+for(const poly of polys){{
+ if(!poly.length) continue;
+ ctx.beginPath();
+ ctx.moveTo(poly[0][0],poly[0][1]);
+ for(let i=1;i<poly.length;i++)ctx.lineTo(poly[i][0],poly[i][1]);
+ ctx.closePath();
+ ctx.fill();
+ ctx.stroke();
+}}
+</script>
+</body></html>"""
+    OUT_QA_HTML.write_text(qa_html,encoding="utf-8")
+
     print("--- BA0122 EXACT 3D WALL GENERATION v2 ---")
     print("Wall source: filled SVG wall masses (#c7c8c9, #646566)")
     print(f"Extruded meshes: {len(meshes)}")
@@ -290,7 +337,8 @@ resize();
     print(f"Wall height: {WALL_HEIGHT_M:.2f} m [ASSUMPTION]")
     print(f"JSON: {OUT_JSON}")
     print(f"OBJ: {OUT_OBJ}")
-    print(f"Viewer: {OUT_HTML}")
+    print(f"Viewer 3D: {OUT_HTML}")
+    print(f"QA 2D vs Master: {OUT_QA_HTML}")
     print("QA: no BO..Bf outline path is closed/extruded as a wall solid.")
 
 if __name__=="__main__":
