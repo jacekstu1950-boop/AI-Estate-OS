@@ -1,0 +1,48 @@
+{
+  "status": "CALIBRATED",
+  "method": "SOURCE_ROOM_AREA_TO_VECTOR_POLYGON",
+  "basis": {
+    "room_id": "living_kitchen",
+    "source_label_area_m2": 23.04,
+    "vector_polygon_svg_units": [
+      [
+        162.589,
+        150.5
+      ],
+      [
+        405.9,
+        150.5
+      ],
+      [
+        405.9,
+        429.306
+      ],
+      [
+        162.589,
+        429.306
+      ]
+    ],
+    "vector_area_svg2": 67882.164766,
+    "note": "Principal living+kitchen polygon is rectangular in structural source vectors; scale derived from source SVG label, not generated imagery."
+  },
+  "scale": {
+    "meters_per_svg_unit": 0.01842931985828394,
+    "centimeters_per_svg_unit": 1.842931985828394,
+    "svg_units_per_meter": 54.26106408606578
+  },
+  "calibrated_dimensions": {
+    "living_kitchen": {
+      "width_svg": 243.311,
+      "depth_svg": 278.806,
+      "width_m": 4.4832,
+      "depth_m": 5.1377,
+      "area_from_calibrated_vectors_m2": 23.04,
+      "status": "PASS"
+    }
+  },
+  "caveats": [
+    "Scale is locked from a source-labeled room area and source structural vectors.",
+    "Other room polygons still require semantic polygon extraction before independent area QA.",
+    "Balcony area remains a source-version conflict: SVG label 9.33 m2 vs current webpage 8.50 m2."
+  ]
+}
