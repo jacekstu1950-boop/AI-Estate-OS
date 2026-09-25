@@ -17,7 +17,7 @@ def local_name(tag):
     return tag.split("}", 1)[-1]
 
 def tokenize_path(d):
-    return re.findall(r"[MLHVZmlhvz]|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?", d or "")
+    return re.findall(r"[MLHVZmlhvz]|-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", d or "")
 
 def parse_filled_subpaths(d):
     toks = tokenize_path(d)
