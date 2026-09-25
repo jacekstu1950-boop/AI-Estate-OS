@@ -13,7 +13,7 @@
   "source_sha256": "c452101011e3ba110f62e4ebaa81ebd1f2539cd3c384deecaefa88bb44e5d947",
   "svg_viewBox": "0 0 750 563",
   "rights_status": "USER_CONFIRMED_PERMISSION",
-  "master_geometry_status": "3D_WALL_GENERATOR_READY_VERTICAL_ASSUMPTIONS_EXPLICIT",
+  "master_geometry_status": "3D_WALL_V1_REJECTED_EXACT_SOURCE_REGENERATION_READY",
   "room_areas": [
     {
       "id": "wardrobe",
@@ -150,9 +150,11 @@
     "opening_semantics": "PASS",
     "metric_scale_basis": "living_kitchen 23.04 m2 source label",
     "room_polygons_max_abs_error_percent": 1.3506937188268047,
-    "opening_subpanel_split": "PENDING_FOR_BALCONY_ASSEMBLIES"
+    "opening_subpanel_split": "PENDING_FOR_BALCONY_ASSEMBLIES",
+    "previous_3d_wall_model": "FAIL_HALLUCINATED_BY_OPEN_PATH_CLOSURE",
+    "exact_wall_mass_strategy": "READY"
   },
-  "next_stage": "run generator locally against official SVG; inspect OBJ/HTML; then lock or revise vertical heights and balcony subpanel profile",
+  "next_stage": "run geometry.ba0122_generate_walls3d_exact and visually compare top-down 3D wall projection with the original 2D SVG before adding doors/windows/furniture",
   "metric_calibration": {
     "status": "CALIBRATED",
     "method": "SOURCE_ROOM_AREA_TO_VECTOR_POLYGON",
@@ -215,17 +217,22 @@
     "note": "Five source-visible openings classified. Balcony assembly overall widths are locked; exact door/fixed-glazing subpanel split remains pending."
   },
   "walls3d": {
-    "generator": "geometry/ba0122_generate_walls3d.py",
-    "status": "READY_TO_GENERATE",
-    "plan_geometry": "SOURCE_DERIVED",
+    "generator": "geometry/ba0122_generate_walls3d_exact.py",
+    "status": "READY_FOR_SOURCE_EXACT_REGENERATION",
+    "plan_geometry": "EXACT_FILLED_SVG_WALL_MASSES",
+    "wall_source_groups": [
+      "fill #c7c8c9",
+      "fill #646566"
+    ],
+    "forbidden_method": "Do not close/extrude BO..Bf source outline strokes as solid polygons.",
     "wall_height_m": {
       "value": 2.7,
       "status": "ASSUMPTION_CONFIGURABLE"
-    },
-    "hinged_door_height_m": {
-      "value": 2.1,
-      "status": "ASSUMPTION_CONFIGURABLE"
-    },
-    "balcony_opening_vertical_profile": "PENDING"
+    }
+  },
+  "previous_walls3d_generator": {
+    "generator": "geometry/ba0122_generate_walls3d.py",
+    "status": "DEPRECATED_INVALID_GEOMETRY",
+    "reason": "It incorrectly treated open architectural outline paths BO..Bf as closed polygons and extruded them, producing geometry not present in the source SVG."
   }
 }
